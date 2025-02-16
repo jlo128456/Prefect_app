@@ -83,9 +83,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       populateContractorJobs(contractor);
     }
   }
-
   function populateAdminJobs() {
     adminJobList.innerHTML = "";
+  
     jobs.forEach((job) => {
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -94,21 +94,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${job.contractor}</td>
         <td class="status-cell">${job.status}</td>
         <td>${job.onsiteTime || "Not yet started"}</td>
+        <td>${job.statusTimestamp || "N/A"}</td>
+        <td>${job.approvedBy || job.rejectedBy || "N/A"}</td>
         <td>
-          ${job.status === "Pending Approval" ? `
+          ${job.status === "Completed - Pending Approval" ? `
             <button class="btn btn-success btn-sm approve-job" data-id="${job.id}">Approve</button>
             <button class="btn btn-warning btn-sm reject-job" data-id="${job.id}">Reject</button>
           ` : ""}
         </td>
       `;
       adminJobList.appendChild(row);
+  
       applyStatusColor(row.querySelector(".status-cell"), job.status);
     });
-
+  
     document.querySelectorAll(".approve-job").forEach((button) =>
-      button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Finished"))
+      button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Approved"))
     );
-
+  
     document.querySelectorAll(".reject-job").forEach((button) =>
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
     );
@@ -278,7 +281,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     modalOverlay.style.zIndex = '999';
     document.body.appendChild(modalOverlay);
   
-    // Render the update form
     const formHTML = `
       <div id="updateJobContainer">
         <h3>Update Work Order: ${job.workOrder}</h3>
@@ -300,7 +302,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <select id="jobStatus" required>
               <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
               <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
-              <option value="Completed" ${job.status === "Completed" ? "selected" : ""}>Completed</option>
+              <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
             </select>
           </div>
           <div>
@@ -343,20 +345,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   
     // Canvas event listeners for drawing
-    signatureCanvas.addEventListener("mousedown", () => (isDrawing = true));
-    signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
-    signatureCanvas.addEventListener("mousemove", drawSignature);
+    signatureCanvas.addEventListener("mousedown", (e) => {
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
   
-    function drawSignature(e) {
+    signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
+    signatureCanvas.addEventListener("mousemove", (e) => {
       if (!isDrawing) return;
       ctx.lineWidth = 2;
       ctx.lineCap = "round";
       ctx.strokeStyle = "black";
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(e.offsetX, e.offsetY);
-    }
+    });
   
     // Clear the signature
     document.getElementById("clearSignature").addEventListener("click", () => {
@@ -371,15 +374,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         customerName: document.getElementById("customerName").value.trim(),
         contactName: document.getElementById("contactName").value.trim(),
         workPerformed: document.getElementById("workPerformed").value.trim(),
-        status: document.getElementById("jobStatus").value,
+        status: "Completed - Pending Approval",  // Automatically set status to "Completed - Pending Approval"
         completionDate: document.getElementById("completionDate").value,
         checklist: {
-          noMissingScrews: document.getElementById("checkScrews").checked || false,
-          softwareUpdated: document.getElementById("checkSoftwareUpdated").checked || false,
-          tested: document.getElementById("checkTested").checked || false,
-          approvedByManagement: document.getElementById("checkApproved").checked || false,
+          noMissingScrews: document.getElementById("checkScrews").checked,
+          softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
+          tested: document.getElementById("checkTested").checked,
+          approvedByManagement: document.getElementById("checkApproved").checked
         },
-        signature: signatureCanvas.toDataURL("image/png") // Convert the signature to base64 string
+        signature: signatureCanvas.toDataURL("image/png")  // Convert signature to base64 string
       };
   
       try {
@@ -388,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedJob)
         });
-        alert("Job updated successfully!");
+        alert("Job updated to 'Completed - Pending Approval' and submitted for admin approval.");
         updateFormContainer.remove();
         modalOverlay.remove();
         showDashboard(currentUserRole);
@@ -405,6 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       showDashboard(currentUserRole);
     });
   }
+  
   
   
   
