@@ -1,0 +1,110 @@
+{
+    "users": [
+      {
+        "username": "admin",
+        "password": "admin123",
+        "role": "admin",
+        "id": "5aab"
+      },
+      {
+        "username": "JeffL",
+        "password": "password123",
+        "role": "contractor",
+        "id": "80b4"
+      },
+      {
+        "username": "tech1",
+        "password": "techpass1",
+        "role": "technician",
+        "id": "53ce"
+      },
+      {
+        "username": "user1",
+        "password": "user123",
+        "role": "viewer",
+        "id": "6135"
+      }
+    ],
+    "jobs": [
+      {
+        "id": "1",
+        "workOrder": "PA2345",
+        "customerName": "Tom's Tavern",
+        "contractor": "JeffL",
+        "status": "Pending",
+        "machines": [
+          {
+            "machineId": "M001",
+            "machineType": "Note Counter",
+            "model": "SB5000",
+            "serialNumber": "NC123456",
+            "lastServiceDate": "2024-12-01"
+          }
+        ],
+        "completionDate": "",
+        "checklist": {
+          "noMissingScrews": false,
+          "softwareUpdated": false,
+          "tested": false,
+          "approvedByManagement": false
+        },
+        "signature": ""
+      },
+      {
+        "id": "2",
+        "workOrder": "PA2346",
+        "customerName": "Sunny Bakery",
+        "contractor": "JeffL",
+        "status": "Pending",
+        "machines": [
+          {
+            "machineId": "M002",
+            "machineType": "Note Counter",
+            "model": "MIB5",
+            "serialNumber": "NC789012",
+            "lastServiceDate": "2024-11-15"
+          },
+          {
+            "machineId": "M003",
+            "machineType": "Coin Dispenser",
+            "model": "CMX02",
+            "serialNumber": "CD345678",
+            "lastServiceDate": "2024-11-20"
+          }
+        ],
+        "completionDate": "",
+        "checklist": {
+          "noMissingScrews": false,
+          "softwareUpdated": false,
+          "tested": false,
+          "approvedByManagement": false
+        },
+        "signature": ""
+      },
+      {
+        "id": "3",
+        "workOrder": "PA2347",
+        "customerName": "Greenfield Apartments",
+        "contractor": "JeffL",
+        "status": "Pending",
+        "machines": [
+          {
+            "machineId": "M004",
+            "machineType": "Note Counter",
+            "model": "SB5000",
+            "serialNumber": "NC567890",
+            "lastServiceDate": "2024-10-10"
+          }
+        ],
+        "completionDate": "",
+        "checklist": {
+          "noMissingScrews": false,
+          "softwareUpdated": false,
+          "tested": false,
+          "approvedByManagement": false
+        },
+        "signature": ""
+      }
+    ]
+  }
+  
