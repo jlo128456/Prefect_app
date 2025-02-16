@@ -93,18 +93,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${job.customerName}</td>
         <td>${job.contractor}</td>
         <td class="status-cell">${job.status}</td>
-        <td>${job.onsiteTime || "Not yet started"}</td>
         <td>${job.statusTimestamp || "N/A"}</td>
-        <td>${job.approvedBy || job.rejectedBy || "N/A"}</td>
         <td>
           ${job.status === "Completed - Pending Approval" ? `
             <button class="btn btn-success btn-sm approve-job" data-id="${job.id}">Approve</button>
             <button class="btn btn-warning btn-sm reject-job" data-id="${job.id}">Reject</button>
-          ` : ""}
+          ` : "N/A"}
         </td>
       `;
       adminJobList.appendChild(row);
-  
       applyStatusColor(row.querySelector(".status-cell"), job.status);
     });
   
