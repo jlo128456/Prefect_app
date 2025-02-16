@@ -31,7 +31,7 @@
       "workOrder": "PA23455",
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
-      "status": "Pending",
+      "status": "In Progress",
       "machines": [
         {
           "machineId": "M001",
@@ -48,7 +48,8 @@
         "tested": false,
         "approvedByManagement": false
       },
-      "signature": ""
+      "signature": "",
+      "onsiteTime": "2/16/2025, 7:49:11 PM"
     },
     {
       "id": "2",

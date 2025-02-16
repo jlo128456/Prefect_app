@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${job.customerName}</td>
         <td>${job.contractor}</td>
         <td class="status-cell">${job.status}</td>
+        <td>${job.onsiteTime || "Not yet started"}</td>
         <td>
           <button class="btn btn-primary btn-sm edit-job" data-id="${job.id}">Edit</button>
           <button class="btn btn-danger btn-sm delete-job" data-id="${job.id}">Delete</button>
@@ -83,15 +84,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       adminJobList.appendChild(row);
       applyStatusColor(row.querySelector(".status-cell"), job.status);
     });
-
+  
     document.querySelectorAll(".edit-job").forEach((button) =>
       button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
     );
-
+  
     document.querySelectorAll(".delete-job").forEach((button) =>
       button.addEventListener("click", (e) => deleteJob(e.target.dataset.id))
     );
   }
+  
 
   function applyStatusColor(statusElement, status) {
     if (status === "Pending") {
@@ -144,20 +146,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   
 
   async function moveJobToInProgress(jobId) {
+    const currentTime = new Date().toLocaleString(); // Log the current date and time
+  
     try {
       const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "In Progress" }),
+        body: JSON.stringify({
+          status: "In Progress",
+          onsiteTime: currentTime, // Add the time when the job was marked as "Onsite"
+        }),
       });
   
       if (!response.ok) {
         throw new Error("Failed to update job status.");
       }
   
-      alert("Job status updated to 'In Progress'.");
+      alert(`Job status updated to 'In Progress' at ${currentTime}.`);
   
-      // Update the status in the table without reloading
+      // Update the status and time in the table live for contractors
       const jobRow = document.querySelector(`button.onsite-job[data-id='${jobId}']`).closest("tr");
       if (jobRow) {
         const statusCell = jobRow.querySelector(".status-cell");
@@ -169,11 +176,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const onsiteButton = jobRow.querySelector(".onsite-job");
         if (onsiteButton) onsiteButton.remove();
       }
+  
+      // Refresh the admin view to show the new onsite time
+      if (currentUserRole === "admin") populateAdminJobs();
     } catch (error) {
       console.error("Error updating job status:", error);
       alert("Failed to update job status.");
     }
   }
+  
   
 
   async function showUpdateJobForm(jobId) {
