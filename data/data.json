@@ -31,7 +31,7 @@
       "workOrder": "PA2345",
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
-      "status": "Pending",
+      "status": "In Progress",
       "machines": [
         {
           "machineId": "M001",

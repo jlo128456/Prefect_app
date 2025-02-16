@@ -143,40 +143,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   
 
-  function populateContractorJobs(contractor) {
-    contractorJobList.innerHTML = "";
+  async function moveJobToInProgress(jobId) {
+    try {
+      const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "In Progress" }),
+      });
   
-    const contractorJobs = jobs.filter((job) => job.contractor === contractor);
+      if (!response.ok) {
+        throw new Error("Failed to update job status.");
+      }
   
-    if (contractorJobs.length === 0) {
-      contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
-      return;
+      alert("Job status updated to 'In Progress'.");
+  
+      // Update the status in the table without reloading
+      const jobRow = document.querySelector(`button.onsite-job[data-id='${jobId}']`).closest("tr");
+      if (jobRow) {
+        const statusCell = jobRow.querySelector(".status-cell");
+        statusCell.textContent = "In Progress";
+        statusCell.style.backgroundColor = "yellow";
+        statusCell.style.color = "black";
+  
+        // Hide the "Onsite" button
+        const onsiteButton = jobRow.querySelector(".onsite-job");
+        if (onsiteButton) onsiteButton.remove();
+      }
+    } catch (error) {
+      console.error("Error updating job status:", error);
+      alert("Failed to update job status.");
     }
-  
-    contractorJobs.forEach((job) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${job.workOrder}</td>
-        <td>${job.customerName}</td>
-        <td class="status-cell">${job.status}</td>
-        <td>
-          ${job.status === "Pending" ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>` : ""}
-          <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>
-        </td>
-      `;
-      contractorJobList.appendChild(row);
-      applyStatusColor(row.querySelector(".status-cell"), job.status);
-    });
-  
-    // Add event listeners for the "Onsite" button
-    contractorJobList.querySelectorAll(".onsite-job").forEach((button) =>
-      button.addEventListener("click", (e) => moveJobToInProgress(e.target.dataset.id))
-    );
-  
-    // Add event listeners for the "Update" button
-    contractorJobList.querySelectorAll(".update-job").forEach((button) =>
-      button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
-    );
   }
   
 
