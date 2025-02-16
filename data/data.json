@@ -28,10 +28,10 @@
   "jobs": [
     {
       "id": "1",
-      "workOrder": "PA2345",
+      "workOrder": "PA23455",
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
-      "status": "In Progress",
+      "status": "Pending",
       "machines": [
         {
           "machineId": "M001",
@@ -52,7 +52,7 @@
     },
     {
       "id": "2",
-      "workOrder": "PA2346",
+      "workOrder": "PA23464",
       "customerName": "Sunny Bakery",
       "contractor": "JeffL",
       "status": "Pending",
@@ -83,7 +83,7 @@
     },
     {
       "id": "3",
-      "workOrder": "PA2347",
+      "workOrder": "PA23474",
       "customerName": "Greenfield Apartments",
       "contractor": "JeffL",
       "status": "Pending",
