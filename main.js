@@ -171,15 +171,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   
     contractorJobs.forEach((job) => {
-      let displayStatus = job.contractorStatus || job.status; // Show contractorStatus if available
+      let displayStatus = job.contractorStatus || job.status; // Use contractorStatus if available
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${job.workOrder}</td>
         <td>${job.customerName}</td>
         <td class="status-cell">${displayStatus}</td>
         <td>
-          ${job.status === "Pending" ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>` : ""}
-          ${job.status === "In Progress" || job.status === "Pending" ? `<button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>` : ""}
+          ${
+            job.status === "Pending"
+              ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>`
+              : ""
+          }
+          ${
+            job.status === "In Progress"
+              ? `<button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>`
+              : ""
+          }
         </td>
       `;
       contractorJobList.appendChild(row);
@@ -194,6 +202,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
     );
   }
+  
   
   
 
