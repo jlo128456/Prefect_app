@@ -41,7 +41,7 @@
           "lastServiceDate": "2024-12-01"
         }
       ],
-      "completionDate": "",
+      "completionDate": "2025-02-18",
       "checklist": {
         "noMissingScrews": false,
         "softwareUpdated": false,
@@ -49,7 +49,11 @@
         "approvedByManagement": false
       },
       "signature": "",
-      "statusTimestamp": ""
+      "statusTimestamp": "",
+      "contractorStatus": "", 
+      "onsiteTime": "",
+      "contactName": "",
+      "workPerformed": ""
     },
     {
       "id": "2",
