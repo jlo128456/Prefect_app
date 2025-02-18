@@ -162,46 +162,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   //populate contractor job in contractor dashboard
   function populateContractorJobs(contractor) {
     contractorJobList.innerHTML = "";
-  
+
     const contractorJobs = jobs.filter((job) => job.contractor === contractor);
-  
+
     if (contractorJobs.length === 0) {
-      contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
-      return;
+        contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
+        return;
     }
-  
+
     contractorJobs.forEach((job) => {
-      let displayStatus = job.contractorStatus || job.status; // Use contractorStatus if available
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${job.workOrder}</td>
-        <td>${job.customerName}</td>
-        <td class="status-cell">${displayStatus}</td>
-        <td>
-          ${
-            job.status === "Pending"
-              ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>`
-              : ""
-          }
-          ${
-            job.status === "In Progress"
-              ? `<button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>`
-              : ""
-          }
-        </td>
-      `;
-      contractorJobList.appendChild(row);
-      applyStatusColor(row.querySelector(".status-cell"), displayStatus);
+        let displayStatus = job.contractorStatus || job.status; //  Use `contractorStatus` if available
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${job.workOrder}</td>
+            <td>${job.customerName}</td>
+            <td class="status-cell">${displayStatus}</td>
+            <td>
+                ${
+                    job.status === "Pending"
+                        ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>`
+                        : ""
+                }
+                ${
+                    job.status === "In Progress"
+                        ? `<button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>`
+                        : ""
+                }
+            </td>
+        `;
+        contractorJobList.appendChild(row);
+        applyStatusColor(row.querySelector(".status-cell"), displayStatus);
     });
-  
+
     contractorJobList.querySelectorAll(".onsite-job").forEach((button) =>
-      button.addEventListener("click", (e) => moveJobToInProgress(e.target.dataset.id))
+        button.addEventListener("click", (e) => moveJobToInProgress(e.target.dataset.id))
     );
-  
+
     contractorJobList.querySelectorAll(".update-job").forEach((button) =>
-      button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
+        button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
     );
-  }
+}
+
   
   
   
@@ -236,79 +237,79 @@ document.addEventListener("DOMContentLoaded", async () => {
   //function to move job in progess
   async function moveJobToInProgress(jobId) {
     try {
-      const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
-      const job = await jobResponse.json();
-  
-      if (!job) {
-        alert("Job not found.");
-        return;
-      }
-  
-      let updatedStatus;
-      let contractorStatus;
-      let statusMessage;
-      
-      // Format timestamp manually (DD/MM/YYYY HH:MM:SS)
-      const currentTime = new Date();
-      const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
-        String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
-        String(currentTime.getHours()).padStart(2, "0")}:${
-        String(currentTime.getMinutes()).padStart(2, "0")}:${
-        String(currentTime.getSeconds()).padStart(2, "0")}`;
-  
-      console.log("Generated Timestamp:", formattedTime);
-  
-      if (job.status === "Pending") {
-        updatedStatus = "In Progress";
-        contractorStatus = "In Progress"; // Contractor sees "In Progress" (yellow)
-        statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
-      } else if (job.status === "In Progress") {
-        updatedStatus = "Completed - Pending Approval";
-        contractorStatus = "Completed"; // Contractor sees "Completed" (green)
-        statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
-      } else {
-        alert("Invalid action: The job is already completed or approved.");
-        return;
-      }
-  
-      console.log("PATCH Request Payload:", {
-        status: updatedStatus,
-        contractorStatus: contractorStatus, // Ensure contractor sees "Completed"
-        statusTimestamp: formattedTime,
-        onsiteTime: job.onsiteTime || formattedTime
-      });
-  
-      const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: updatedStatus,
-          contractorStatus: contractorStatus, // Ensure this gets updated
-          statusTimestamp: formattedTime, // Update last updated time
-          onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
-        })
-      });
-  
-      const responseData = await response.json();
-      console.log("PATCH Response Data:", responseData);
-  
-      if (!response.ok) {
-        throw new Error("Failed to update job status.");
-      }
-  
-      alert(statusMessage);
-  
-      // Refresh jobs from server
-      const jobsResponse = await fetch("http://localhost:3000/jobs");
-      jobs = await jobsResponse.json();
-  
-      populateAdminJobs();
-      populateContractorJobs(job.contractor);
+        const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
+        const job = await jobResponse.json();
+
+        if (!job) {
+            alert("Job not found.");
+            return;
+        }
+
+        let updatedStatus;
+        let contractorStatus;
+        let statusMessage;
+
+        // Format timestamp manually (DD/MM/YYYY HH:MM:SS)
+        const currentTime = new Date();
+        const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
+            String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
+            String(currentTime.getHours()).padStart(2, "0")}:${
+            String(currentTime.getMinutes()).padStart(2, "0")}:${
+            String(currentTime.getSeconds()).padStart(2, "0")}`;
+
+        console.log("Generated Timestamp:", formattedTime);
+
+        if (job.status === "Pending") {
+            updatedStatus = "In Progress";
+            contractorStatus = "In Progress"; // Contractor sees "In Progress" (yellow)
+            statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
+        } else if (job.status === "In Progress") {
+            updatedStatus = "Completed - Pending Approval";
+            contractorStatus = "Completed"; //  Fix: Ensure contractor sees "Completed"
+            statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
+        } else {
+            alert("Invalid action: The job is already completed or approved.");
+            return;
+        }
+
+        //  Ensure `contractorStatus` is explicitly included
+        const updatedJob = {
+            ...job, // Spread operator ensures all job properties are included
+            status: updatedStatus,
+            contractorStatus: contractorStatus, //  Fix: Ensure this gets updated
+            statusTimestamp: formattedTime, //  Update last updated time
+            onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
+        };
+
+        console.log("PATCH Request Payload:", updatedJob);
+
+        const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedJob) //  Fix: Send the full updated job object
+        });
+
+        const responseData = await response.json();
+        console.log("PATCH Response Data:", responseData);
+
+        if (!response.ok) {
+            throw new Error("Failed to update job status.");
+        }
+
+        alert(statusMessage);
+
+        // Refresh jobs from server
+        const jobsResponse = await fetch("http://localhost:3000/jobs");
+        jobs = await jobsResponse.json();
+
+        populateAdminJobs();
+        populateContractorJobs(job.contractor); //  Ensure contractor view updates
     } catch (error) {
-      console.error("Error updating job status:", error);
-      alert("Failed to update job status.");
+        console.error("Error updating job status:", error);
+        alert("Failed to update job status.");
     }
-  }
+}
+
   //update job form data
   async function showUpdateJobForm(jobId) {
     const job = jobs.find((j) => j.id.toString() === jobId.toString());
