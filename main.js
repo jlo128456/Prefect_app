@@ -80,13 +80,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     adminJobList.innerHTML = "";
   
     jobs.forEach((job) => {
+      const lastUpdated = job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A";
+  
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${job.workOrder}</td>
         <td>${job.customerName}</td>
         <td>${job.contractor}</td>
         <td class="status-cell">${job.status}</td>
-        <td>${job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A"}</td>
+        <td>${lastUpdated}</td>
         <td>
           ${job.status === "Completed - Pending Approval" ? `
             <button class="btn btn-success btn-sm approve-job" data-id="${job.id}">Approve</button>
@@ -106,6 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
     );
   }
+  
   
 
   async function checkForJobUpdates() {
@@ -192,7 +195,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   
 
   function formatDateTime(dateString) {
+    if (!dateString || dateString === "N/A") return "N/A"; // Prevent NaN errors
     const date = new Date(dateString);
+  
+    if (isNaN(date)) return "N/A"; // Handle invalid date formats
+  
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -202,6 +209,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
+  
   
   async function moveJobToInProgress(jobId) {
     try {
@@ -215,8 +223,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       let updatedStatus;
       let statusMessage;
-      const currentTime = new Date(); // Get current timestamp
-      const formattedTime = formatDateTime(currentTime); // Format to DD/MM/YYYY HH:MM:SS
+      const currentTime = new Date();
+      const formattedTime = formatDateTime(currentTime);
   
       if (job.status === "Pending") {
         updatedStatus = "In Progress";
@@ -278,6 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to update job status.");
     }
   }
+  
   
   async function showUpdateJobForm(jobId) {
     const job = jobs.find((j) => j.id.toString() === jobId.toString());
