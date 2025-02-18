@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const contractorView = document.getElementById("contractorView");
   const contractorJobList = document.getElementById("contractorJobList");
   const adminJobList = document.getElementById("adminJobList");
-  const homeButton = document.getElementById("homeButton");
+  
   
   let currentUserRole = null;
 
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     adminView.style.display = "none";
     contractorView.style.display = "none";
     loginForm.style.display = "none";
-    homeButton.style.display = "none";
+    
 
     // Stop polling when leaving the admin dashboard
     if (pollingInterval) {
@@ -56,14 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  homeButton.addEventListener("click", () => {
-    if (currentUserRole) {
-      showDashboard(currentUserRole);
-    } else {
-      resetViews();
-      loginForm.style.display = "block";
-    }
-  });
+
 
   function showDashboard(role) {
     resetViews();
@@ -93,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${job.customerName}</td>
         <td>${job.contractor}</td>
         <td class="status-cell">${job.status}</td>
-        <td>${job.statusTimestamp || "N/A"}</td>
+        <td>${job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A"}</td>
         <td>
           ${job.status === "Completed - Pending Approval" ? `
             <button class="btn btn-success btn-sm approve-job" data-id="${job.id}">Approve</button>
@@ -113,6 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
     );
   }
+  
 
   async function checkForJobUpdates() {
     try {
@@ -197,43 +191,82 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   
 
-  async function moveJobToInProgress(jobId) {
-    const currentTime = new Date().toLocaleString(); // Log the current date and time
+  function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
   
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  }
+  
+  async function moveJobToInProgress(jobId) {
     try {
+      const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
+      const job = await jobResponse.json();
+  
+      if (!job) {
+        alert("Job not found.");
+        return;
+      }
+  
+      let updatedStatus;
+      let statusMessage;
+      const currentTime = new Date(); // Get current timestamp
+      const formattedTime = formatDateTime(currentTime); // Format to DD/MM/YYYY HH:MM:SS
+  
+      if (job.status === "Pending") {
+        updatedStatus = "In Progress";
+        statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
+      } else if (job.status === "In Progress") {
+        updatedStatus = "Completed - Pending Approval";
+        statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
+      } else {
+        alert("Invalid action: The job is already completed or approved.");
+        return;
+      }
+  
       const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "Pending Approval",  // Set the status to "Pending Approval"
-          onsiteTime: currentTime      // Add the time when the job was marked as "Onsite"
-        }),
+          status: updatedStatus,
+          statusTimestamp: formattedTime,
+          onsiteTime: job.onsiteTime || formattedTime
+        })
       });
   
       if (!response.ok) {
         throw new Error("Failed to update job status.");
       }
   
-      alert(`Job status updated to 'Pending Approval' at ${currentTime}.`);
+      alert(statusMessage);
   
-      // Refresh job list from the server to ensure accurate data
       const jobsResponse = await fetch("http://localhost:3000/jobs");
       jobs = await jobsResponse.json();
   
-      // Update the status and time in the table live for contractors
       const jobRow = document.querySelector(`button.onsite-job[data-id='${jobId}']`)?.closest("tr");
       if (jobRow) {
         const statusCell = jobRow.querySelector(".status-cell");
-        statusCell.textContent = "Pending Approval";
-        statusCell.style.backgroundColor = "orange";
-        statusCell.style.color = "white";
+        statusCell.textContent = updatedStatus;
   
-        // Hide the "Onsite" button after updating the status
-        const onsiteButton = jobRow.querySelector(".onsite-job");
-        if (onsiteButton) onsiteButton.remove();
+        if (updatedStatus === "In Progress") {
+          statusCell.style.backgroundColor = "yellow";
+          statusCell.style.color = "black";
+        } else if (updatedStatus === "Completed - Pending Approval") {
+          statusCell.style.backgroundColor = "orange";
+          statusCell.style.color = "white";
+        }
+  
+        if (updatedStatus === "In Progress") {
+          const onsiteButton = jobRow.querySelector(".onsite-job");
+          if (onsiteButton) onsiteButton.remove();
+        }
       }
   
-      // Refresh the contractor or admin view based on the current user role
       if (currentUserRole === "admin") {
         populateAdminJobs();
       } else {
@@ -246,9 +279,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
   
-  
-  
-
   async function showUpdateJobForm(jobId) {
     const job = jobs.find((j) => j.id.toString() === jobId.toString());
     if (!job) {
@@ -405,11 +435,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       showDashboard(currentUserRole);
     });
   }
-  
-  
-  
-  
-  
   
   async function deleteJob(jobId) {
     if (confirm("Are you sure you want to delete this job?")) {
