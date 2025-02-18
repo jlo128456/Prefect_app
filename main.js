@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (user) {
       currentUserRole = user.role;
       loginForm.style.display = "none";
-      homeButton.style.display = "block";
       showDashboard(user.role);
     } else {
       alert("Invalid username or password.");
@@ -95,19 +94,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button class="btn btn-warning btn-sm reject-job" data-id="${job.id}">Reject</button>
           ` : "N/A"}
         </td>
-      `;
+      `; // Properly closing the row
       adminJobList.appendChild(row);
       applyStatusColor(row.querySelector(".status-cell"), job.status);
     });
   
+    // Attach event listeners to "Approve" buttons
     document.querySelectorAll(".approve-job").forEach((button) =>
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Approved"))
     );
   
+    // Attach event listeners to "Reject" buttons
     document.querySelectorAll(".reject-job").forEach((button) =>
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
     );
   }
+  
+  
   
   
 
