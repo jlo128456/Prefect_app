@@ -75,6 +75,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       populateContractorJobs(contractor);
     }
   }
+
+  //function to populated admin job in dashboard
   function populateAdminJobs() {
     adminJobList.innerHTML = "";
   
@@ -94,26 +96,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button class="btn btn-warning btn-sm reject-job" data-id="${job.id}">Reject</button>
           ` : "N/A"}
         </td>
-      `; // Properly closing the row
+      `;
       adminJobList.appendChild(row);
       applyStatusColor(row.querySelector(".status-cell"), job.status);
     });
   
-    // Attach event listeners to "Approve" buttons
     document.querySelectorAll(".approve-job").forEach((button) =>
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Approved"))
     );
   
-    // Attach event listeners to "Reject" buttons
     document.querySelectorAll(".reject-job").forEach((button) =>
       button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
     );
   }
   
   
-  
-  
-
   async function checkForJobUpdates() {
     try {
       const response = await fetch("http://localhost:3000/jobs");
@@ -199,9 +196,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function formatDateTime(dateString) {
     if (!dateString || dateString === "N/A") return "N/A"; // Prevent NaN errors
+  
+    // If dateString is already formatted, return it as-is
+    if (dateString.includes("/")) return dateString;
+  
     const date = new Date(dateString);
   
-    if (isNaN(date)) return "N/A"; // Handle invalid date formats
+    if (isNaN(date.getTime())) return "N/A"; // Handles invalid date formats
   
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -212,8 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
-  
-  
+
   async function moveJobToInProgress(jobId) {
     try {
       const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
@@ -245,8 +245,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: updatedStatus,
-          statusTimestamp: formattedTime,
-          onsiteTime: job.onsiteTime || formattedTime
+          statusTimestamp: formattedTime, // Store timestamp correctly
+          onsiteTime: job.onsiteTime || formattedTime // Set onsite time only if not already set
         })
       });
   
@@ -256,9 +256,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       alert(statusMessage);
   
+      // Refresh the job list
       const jobsResponse = await fetch("http://localhost:3000/jobs");
       jobs = await jobsResponse.json();
   
+      // Update status in the admin view
       const jobRow = document.querySelector(`button.onsite-job[data-id='${jobId}']`)?.closest("tr");
       if (jobRow) {
         const statusCell = jobRow.querySelector(".status-cell");
@@ -278,6 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
   
+      // Refresh the Admin or Contractor View
       if (currentUserRole === "admin") {
         populateAdminJobs();
       } else {
@@ -289,6 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to update job status.");
     }
   }
+  
   
   
   async function showUpdateJobForm(jobId) {
