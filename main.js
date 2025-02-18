@@ -260,11 +260,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       if (job.status === "Pending") {
         updatedStatus = "In Progress";
-        contractorStatus = "In Progress"; // Yellow in contractor view
+        contractorStatus = "In Progress"; // Contractor sees "In Progress" (yellow)
         statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
       } else if (job.status === "In Progress") {
         updatedStatus = "Completed - Pending Approval";
-        contractorStatus = "Completed"; // Green in contractor view
+        contractorStatus = "Completed"; // Contractor sees "Completed" (green)
         statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
       } else {
         alert("Invalid action: The job is already completed or approved.");
@@ -273,8 +273,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       console.log("PATCH Request Payload:", {
         status: updatedStatus,
-        contractorStatus: contractorStatus,
-        statusTimestamp: formattedTime
+        contractorStatus: contractorStatus, // Ensure contractor sees "Completed"
+        statusTimestamp: formattedTime,
+        onsiteTime: job.onsiteTime || formattedTime
       });
   
       const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
@@ -282,9 +283,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: updatedStatus,
-          contractorStatus: contractorStatus, // Contractor sees "Completed" instead of "Pending Approval"
+          contractorStatus: contractorStatus, // Ensure this gets updated
           statusTimestamp: formattedTime, // Update last updated time
-          onsiteTime: job.onsiteTime || formattedTime // Set onsite time if not set
+          onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
         })
       });
   
@@ -308,7 +309,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to update job status.");
     }
   }
-  
+  //update job form data
   async function showUpdateJobForm(jobId) {
     const job = jobs.find((j) => j.id.toString() === jobId.toString());
     if (!job) {
