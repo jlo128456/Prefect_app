@@ -195,14 +195,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   
 
   function formatDateTime(dateString) {
-    if (!dateString || dateString === "N/A") return "N/A"; // Prevent NaN errors
+    if (!dateString) return "N/A"; // Handle null or undefined values
   
-    // If dateString is already formatted, return it as-is
+    if (typeof dateString !== "string") {
+      console.error("Invalid date format received:", dateString);
+      return "N/A"; // Prevents crashing if dateString is an object
+    }
+  
+    // If already formatted, return it
     if (dateString.includes("/")) return dateString;
   
     const date = new Date(dateString);
   
-    if (isNaN(date.getTime())) return "N/A"; // Handles invalid date formats
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date detected:", dateString);
+      return "N/A"; // Handles bad date inputs
+    }
   
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -213,7 +221,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
-
+  
   async function moveJobToInProgress(jobId) {
     try {
       const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
@@ -226,8 +234,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       let updatedStatus;
       let statusMessage;
+      
+      // Format timestamp manually
       const currentTime = new Date();
-      const formattedTime = formatDateTime(currentTime);
+      const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
+        String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
+        String(currentTime.getHours()).padStart(2, "0")}:${
+        String(currentTime.getMinutes()).padStart(2, "0")}:${
+        String(currentTime.getSeconds()).padStart(2, "0")}`;
+  
+      console.log("Generated Timestamp:", formattedTime);
   
       if (job.status === "Pending") {
         updatedStatus = "In Progress";
@@ -240,15 +256,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
   
+      console.log("PATCH Request Payload:", {
+        status: updatedStatus,
+        statusTimestamp: formattedTime,
+        onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
+      });
+  
       const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: updatedStatus,
-          statusTimestamp: formattedTime, // Store timestamp correctly
-          onsiteTime: job.onsiteTime || formattedTime // Set onsite time only if not already set
+          statusTimestamp: formattedTime, // Ensure correct format
+          onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
         })
       });
+  
+      const responseData = await response.json();
+      console.log("PATCH Response Data:", responseData);
   
       if (!response.ok) {
         throw new Error("Failed to update job status.");
@@ -256,42 +281,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       alert(statusMessage);
   
-      // Refresh the job list
+      // Refresh jobs from server
       const jobsResponse = await fetch("http://localhost:3000/jobs");
       jobs = await jobsResponse.json();
   
-      // Update status in the admin view
-      const jobRow = document.querySelector(`button.onsite-job[data-id='${jobId}']`)?.closest("tr");
-      if (jobRow) {
-        const statusCell = jobRow.querySelector(".status-cell");
-        statusCell.textContent = updatedStatus;
-  
-        if (updatedStatus === "In Progress") {
-          statusCell.style.backgroundColor = "yellow";
-          statusCell.style.color = "black";
-        } else if (updatedStatus === "Completed - Pending Approval") {
-          statusCell.style.backgroundColor = "orange";
-          statusCell.style.color = "white";
-        }
-  
-        if (updatedStatus === "In Progress") {
-          const onsiteButton = jobRow.querySelector(".onsite-job");
-          if (onsiteButton) onsiteButton.remove();
-        }
-      }
-  
-      // Refresh the Admin or Contractor View
-      if (currentUserRole === "admin") {
-        populateAdminJobs();
-      } else {
-        const contractor = users.find((u) => u.role === "contractor").username;
-        populateContractorJobs(contractor);
-      }
+      populateAdminJobs();
+      populateContractorJobs(job.contractor);
     } catch (error) {
       console.error("Error updating job status:", error);
       alert("Failed to update job status.");
     }
   }
+  
+  
+  
   
   
   

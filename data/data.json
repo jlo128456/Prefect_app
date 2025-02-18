@@ -31,7 +31,7 @@
       "workOrder": "PA23455",
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
-      "status": "Pending",
+      "status": "",
       "machines": [
         {
           "machineId": "M001",
@@ -41,7 +41,7 @@
           "lastServiceDate": "2024-12-01"
         }
       ],
-      "completionDate": "",
+      "completionDate": "2025-02-18",
       "checklist": {
         "noMissingScrews": false,
         "softwareUpdated": false,
@@ -49,9 +49,6 @@
         "approvedByManagement": false
       },
       "signature": "",
-      "onsiteTime": "",
-      "contactName": "",
-      "workPerformed": "",
       "statusTimestamp": ""
     },
     {
