@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error checking for job updates:", error);
     }
   }
-
+//fubction to create traffic light system
   function applyStatusColor(statusElement, status) {
     if (status === "Pending") {
       statusElement.style.backgroundColor = "red";
@@ -133,14 +133,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (status === "In Progress") {
       statusElement.style.backgroundColor = "yellow";
       statusElement.style.color = "black";
-    } else if (status === "Pending Approval") {
-      statusElement.style.backgroundColor = "orange";
-      statusElement.style.color = "white";
-    } else if (status === "Finished") {
+    } else if (status === "Completed") {
       statusElement.style.backgroundColor = "green";
+      statusElement.style.color = "white";
+    } else if (status === "Completed - Pending Approval") {
+      statusElement.style.backgroundColor = "orange";
       statusElement.style.color = "white";
     }
   }
+  
 
   async function updateJobStatus(jobId, newStatus) {
     try {
@@ -158,40 +159,42 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to update the job status.");
     }
   }
-
+  //populate contractor job in contractor dashboard
   function populateContractorJobs(contractor) {
     contractorJobList.innerHTML = "";
-
+  
     const contractorJobs = jobs.filter((job) => job.contractor === contractor);
-
+  
     if (contractorJobs.length === 0) {
       contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
       return;
     }
-
+  
     contractorJobs.forEach((job) => {
+      let displayStatus = job.contractorStatus || job.status; // Show contractorStatus if available
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${job.workOrder}</td>
         <td>${job.customerName}</td>
-        <td class="status-cell">${job.status}</td>
+        <td class="status-cell">${displayStatus}</td>
         <td>
           ${job.status === "Pending" ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>` : ""}
-          <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>
+          ${job.status === "In Progress" || job.status === "Pending" ? `<button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>` : ""}
         </td>
       `;
       contractorJobList.appendChild(row);
-      applyStatusColor(row.querySelector(".status-cell"), job.status);
+      applyStatusColor(row.querySelector(".status-cell"), displayStatus);
     });
-
+  
     contractorJobList.querySelectorAll(".onsite-job").forEach((button) =>
       button.addEventListener("click", (e) => moveJobToInProgress(e.target.dataset.id))
     );
-
+  
     contractorJobList.querySelectorAll(".update-job").forEach((button) =>
       button.addEventListener("click", (e) => showUpdateJobForm(e.target.dataset.id))
     );
   }
+  
   
 
   function formatDateTime(dateString) {
@@ -221,7 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
-  
+  //function to move job in progess
   async function moveJobToInProgress(jobId) {
     try {
       const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
@@ -233,9 +236,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
   
       let updatedStatus;
+      let contractorStatus;
       let statusMessage;
       
-      // Format timestamp manually
+      // Format timestamp manually (DD/MM/YYYY HH:MM:SS)
       const currentTime = new Date();
       const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
         String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
@@ -247,9 +251,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       if (job.status === "Pending") {
         updatedStatus = "In Progress";
+        contractorStatus = "In Progress"; // Yellow in contractor view
         statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
       } else if (job.status === "In Progress") {
         updatedStatus = "Completed - Pending Approval";
+        contractorStatus = "Completed"; // Green in contractor view
         statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
       } else {
         alert("Invalid action: The job is already completed or approved.");
@@ -258,8 +264,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   
       console.log("PATCH Request Payload:", {
         status: updatedStatus,
-        statusTimestamp: formattedTime,
-        onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
+        contractorStatus: contractorStatus,
+        statusTimestamp: formattedTime
       });
   
       const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
@@ -267,8 +273,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: updatedStatus,
-          statusTimestamp: formattedTime, // Ensure correct format
-          onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
+          contractorStatus: contractorStatus, // Contractor sees "Completed" instead of "Pending Approval"
+          statusTimestamp: formattedTime, // Update last updated time
+          onsiteTime: job.onsiteTime || formattedTime // Set onsite time if not set
         })
       });
   
@@ -292,11 +299,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to update job status.");
     }
   }
-  
-  
-  
-  
-  
   
   async function showUpdateJobForm(jobId) {
     const job = jobs.find((j) => j.id.toString() === jobId.toString());
