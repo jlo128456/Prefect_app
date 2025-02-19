@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td class="status-cell">${displayStatus}</td>
         <td>
           ${job.status === "Pending" ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>` : ""}
-          <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Update</button>
+          <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Job Completed</button>
         </td>
       `;
       contractorJobList.appendChild(row);
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Job not found!");
       return;
     }
-
+  
     // Fetch machines from data.json
     let availableMachines = [];
     try {
@@ -276,17 +276,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.error("Error fetching machines:", error);
     }
-
-    // Remove existing update form
+  
+    // Remove existing update form and overlay if present
     const existingForm = document.getElementById("updateJobContainer");
     const existingOverlay = document.getElementById("modalOverlay");
     if (existingForm) existingForm.remove();
     if (existingOverlay) existingOverlay.remove();
-
+  
     // Hide current views
     adminView.style.display = "none";
     contractorView.style.display = "none";
-
+  
     // Create modal overlay
     const modalOverlay = document.createElement("div");
     modalOverlay.id = "modalOverlay";
@@ -298,6 +298,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     modalOverlay.style.background = "rgba(0, 0, 0, 0.5)";
     modalOverlay.style.zIndex = "999";
     document.body.appendChild(modalOverlay);
+  
+    // For contractors, use a hidden input for job status; for admins, show the dropdown
+    const statusField = currentUserRole === "contractor"
+      ? `<input type="hidden" id="jobStatus" value="Completed">`
+      : `
+        <select id="jobStatus" required>
+          <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
+          <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
+          <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
+        </select>
+      `;
   
     const formHTML = `
       <div id="updateJobContainer">
@@ -332,7 +343,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </select>
             <textarea id="workPerformed" rows="3" required>${job.workPerformed || ""}</textarea>
           </div>
-
+  
           <div>
             <label>Select Machines</label>
             <select id="machineSelect">
@@ -341,38 +352,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             </select>
             <button type="button" id="addMachine">Add Machine</button>
           </div>
-
+  
           <div id="machineList">
             ${job.machines.map(machineId => {
-              // Find machine details from availableMachines using machineId
-              const machine = availableMachines.find(m => m.machineId === machineId);
-              if (!machine) return "";
-              return `
-              <div class="machine-entry" data-id="${machine.machineId}">
-                <strong>${machine.machineType} - ${machine.model}</strong>
-                <label>Notes:</label>
-                <textarea class="machine-notes">${machine.notes || ""}</textarea>
-                <label>Parts Used:</label>
-                <input type="text" class="machine-parts" value="${machine.partsUsed || ""}">
-                <button type="button" class="remove-machine">Remove</button>
-              </div>
-              `;
+                const machine = availableMachines.find(m => m.machineId === machineId);
+                if (!machine) return "";
+                return `
+                  <div class="machine-entry" data-id="${machine.machineId}">
+                    <strong>${machine.machineType} - ${machine.model}</strong>
+                    <label>Notes:</label>
+                    <textarea class="machine-notes">${machine.notes || ""}</textarea>
+                    <label>Parts Used:</label>
+                    <input type="text" class="machine-parts" value="${machine.partsUsed || ""}">
+                    <button type="button" class="remove-machine">Remove</button>
+                  </div>
+                `;
             }).join("")}
           </div>
-
+  
           <div>
             <label>Job Status</label>
-            <select id="jobStatus" required>
-              ${
-                currentUserRole === "contractor"
-                  ? `<option value="Completed">Completed</option>` // Contractor only sees "Completed"
-                  : `
-                    <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
-                    <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
-                    <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
-                  `
-              }
-            </select>
+            ${statusField}
           </div>
           
           <div>
@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? "checked" : ""}> Approved by Management
             </div>
           </div>
-
+  
           <div>
             <label>Signature</label>
             <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
@@ -401,11 +401,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button type="button" id="backToDashboard">Back to Dashboard</button>
       </div>
     `;
-
+  
     const updateFormContainer = document.createElement("div");
     updateFormContainer.innerHTML = formHTML;
     document.body.appendChild(updateFormContainer);
   
+    // Initialize signature pad
     const signatureCanvas = document.getElementById("signatureCanvas");
     const ctx = signatureCanvas.getContext("2d");
     let isDrawing = false;
@@ -417,13 +418,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       img.onload = () => ctx.drawImage(img, 0, 0);
     }
   
-    // Canvas event listeners for drawing
+    // Canvas drawing events
     signatureCanvas.addEventListener("mousedown", (e) => {
       isDrawing = true;
       ctx.beginPath();
       ctx.moveTo(e.offsetX, e.offsetY);
     });
-  
     signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
     signatureCanvas.addEventListener("mousemove", (e) => {
       if (!isDrawing) return;
@@ -434,48 +434,92 @@ document.addEventListener("DOMContentLoaded", async () => {
       ctx.stroke();
     });
   
-    // Clear the signature
+    // Clear signature button
     document.getElementById("clearSignature").addEventListener("click", () => {
       ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    });
+  
+    // Append work performed phrase from dropdown
+    document.getElementById("workPerformedDropdown").addEventListener("change", function() {
+      const selectedPhrase = this.value;
+      const textarea = document.getElementById("workPerformed");
+      if (selectedPhrase) {
+        textarea.value += selectedPhrase + "\n";
+      }
+    });
+  
+    // Add machine button
+    document.getElementById("addMachine").addEventListener("click", function() {
+      const machineSelect = document.getElementById("machineSelect");
+      const selectedMachineId = machineSelect.value;
+      const selectedMachineName = machineSelect.options[machineSelect.selectedIndex].text;
+  
+      if (!selectedMachineId) {
+        alert("Please select a machine!");
+        return;
+      }
+      const machineList = document.getElementById("machineList");
+      if (document.querySelector(`[data-id="${selectedMachineId}"]`)) {
+        alert("Machine already added!");
+        return;
+      }
+      const machineEntry = document.createElement("div");
+      machineEntry.classList.add("machine-entry");
+      machineEntry.setAttribute("data-id", selectedMachineId);
+      machineEntry.innerHTML = `
+        <strong>${selectedMachineName}</strong>
+        <label>Notes:</label>
+        <textarea class="machine-notes"></textarea>
+        <label>Parts Used:</label>
+        <input type="text" class="machine-parts">
+        <button type="button" class="remove-machine">Remove</button>
+      `;
+      machineList.appendChild(machineEntry);
+    });
+  
+    // Remove machine event
+    document.getElementById("machineList").addEventListener("click", function(event) {
+      if (event.target.classList.contains("remove-machine")) {
+        event.target.parentElement.remove();
+      }
     });
   
     // Handle form submission
     document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-  
       let newStatus = document.getElementById("jobStatus").value;
-      let newContractorStatus = document.getElementById("jobStatus").value; // We'll adjust if it's "Completed"
+      // For contractors, we always want to set status to "Completed - Pending Approval"
+      // while showing contractorStatus as "Completed"
+      let newContractorStatus = newStatus;
       if (currentUserRole === "contractor" && newStatus === "Completed") {
-        newStatus = "Completed - Pending Approval";   //for admin
-        newContractorStatus = "Completed";           // For contractor
+        newStatus = "Completed - Pending Approval";
+        newContractorStatus = "Completed";
       }
-  
       const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
-          id: machine.getAttribute("data-id"),
-          name: machine.querySelector("strong").innerText,
-          notes: machine.querySelector(".machine-notes").value,
-          partsUsed: machine.querySelector(".machine-parts").value
+        id: machine.getAttribute("data-id"),
+        name: machine.querySelector("strong").innerText,
+        notes: machine.querySelector(".machine-notes").value,
+        partsUsed: machine.querySelector(".machine-parts").value
       }));
-  
       const updatedJob = {
-          customerName: document.getElementById("customerName").value.trim(),
-          contactName: document.getElementById("contactName").value.trim(),
-          workPerformed: document.getElementById("workPerformed").value.trim(),
-          travelTime: document.getElementById("travelTime").value,
-          labourTime: document.getElementById("labourTime").value,
-          status: newStatus,              // Admin sees "Completed - Pending Approval"
-          contractorStatus: newContractorStatus, // Contractor sees "Completed"
-          completionDate: document.getElementById("completionDate").value,
-          checklist: {
-              noMissingScrews: document.getElementById("checkScrews").checked,
-              softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
-              tested: document.getElementById("checkTested").checked,
-              approvedByManagement: document.getElementById("checkApproved").checked
-          },
-          signature: signatureCanvas.toDataURL("image/png"),
-          machines: updatedMachines
+        customerName: document.getElementById("customerName").value.trim(),
+        contactName: document.getElementById("contactName").value.trim(),
+        workPerformed: document.getElementById("workPerformed").value.trim(),
+        travelTime: document.getElementById("travelTime").value,
+        labourTime: document.getElementById("labourTime").value,
+        status: newStatus,
+        contractorStatus: newContractorStatus,
+        completionDate: document.getElementById("completionDate").value,
+        checklist: {
+          noMissingScrews: document.getElementById("checkScrews").checked,
+          softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
+          tested: document.getElementById("checkTested").checked,
+          approvedByManagement: document.getElementById("checkApproved").checked
+        },
+        signature: signatureCanvas.toDataURL("image/png"),
+        machines: updatedMachines
       };
-  
+    
       try {
         await fetch(`http://localhost:3000/jobs/${job.id}`, {
           method: "PATCH",
@@ -498,18 +542,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       modalOverlay.remove();
       showDashboard(currentUserRole);
     });
-}
-  
-async function deleteJob(jobId) {
-  if (confirm("Are you sure you want to delete this job?")) {
-    try {
-      await fetch(`http://localhost:3000/jobs/${jobId}`, { method: "DELETE" });
-      alert("Job deleted successfully.");
-      showDashboard(currentUserRole);
-    } catch (error) {
-      console.error("Error deleting job:", error);
-      alert("Failed to delete the job.");
+  }
+    
+  async function deleteJob(jobId) {
+    if (confirm("Are you sure you want to delete this job?")) {
+      try {
+        await fetch(`http://localhost:3000/jobs/${jobId}`, { method: "DELETE" });
+        alert("Job deleted successfully.");
+        showDashboard(currentUserRole);
+      } catch (error) {
+        console.error("Error deleting job:", error);
+        alert("Failed to delete the job.");
+      }
     }
   }
-}
 });
