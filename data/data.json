@@ -31,28 +31,32 @@
       "machineType": "Note Counter",
       "model": "SB5000",
       "serialNumber": "NC123456",
-      "lastServiceDate": "2024-12-01"
+      "lastServiceDate": "2024-12-01",
+      "id": "4583"
     },
     {
       "machineId": "M002",
       "machineType": "Note Counter",
       "model": "MIB5",
       "serialNumber": "NC789012",
-      "lastServiceDate": "2024-11-15"
+      "lastServiceDate": "2024-11-15",
+      "id": "4c53"
     },
     {
       "machineId": "M003",
       "machineType": "Coin Dispenser",
       "model": "CMX02",
       "serialNumber": "CD345678",
-      "lastServiceDate": "2024-11-20"
+      "lastServiceDate": "2024-11-20",
+      "id": "267e"
     },
     {
       "machineId": "M004",
       "machineType": "Note Counter",
       "model": "SB5000",
       "serialNumber": "NC567890",
-      "lastServiceDate": "2024-10-10"
+      "lastServiceDate": "2024-10-10",
+      "id": "0d38"
     }
   ],
   "jobs": [
@@ -62,20 +66,22 @@
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": ["M001"],
+      "machines": [],
       "completionDate": "",
       "checklist": {
-        "noMissingScrews": true,
-        "softwareUpdated": true,
-        "tested": true,
-        "approvedByManagement": true
+        "noMissingScrews": false,
+        "softwareUpdated": false,
+        "tested": false,
+        "approvedByManagement": false
       },
       "signature": "",
       "statusTimestamp": "",
       "contractorStatus": "",
       "onsiteTime": "",
       "contactName": "",
-      "workPerformed": ""
+      "workPerformed": "",
+      "travelTime": "",
+      "labourTime": ""
     },
     {
       "id": "2",
@@ -83,13 +89,16 @@
       "customerName": "Sunny Bakery",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": ["M002", "M003"],
+      "machines": [
+        "M002",
+        "M003"
+      ],
       "completionDate": "",
       "checklist": {
-        "noMissingScrews": true,
-        "softwareUpdated": true,
-        "tested": true,
-        "approvedByManagement": true
+        "noMissingScrews": false,
+        "softwareUpdated": false,
+        "tested": false,
+        "approvedByManagement": false
       },
       "signature": "",
       "onsiteTime": "",
@@ -104,7 +113,9 @@
       "customerName": "Greenfield Apartments",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": ["M004"],
+      "machines": [
+        "M004"
+      ],
       "completionDate": "",
       "checklist": {
         "noMissingScrews": false,

@@ -444,8 +444,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
   
       let newStatus = document.getElementById("jobStatus").value;
+      let newContractorStatus = document.getElementById("jobStatus").value; // We'll adjust if it's "Completed"
       if (currentUserRole === "contractor" && newStatus === "Completed") {
-        newStatus = "Completed - Pending Approval";
+        newStatus = "Completed - Pending Approval";   //for admin
+        newContractorStatus = "Completed";           // For contractor
       }
   
       const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
@@ -461,7 +463,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           workPerformed: document.getElementById("workPerformed").value.trim(),
           travelTime: document.getElementById("travelTime").value,
           labourTime: document.getElementById("labourTime").value,
-          status: newStatus,
+          status: newStatus,              // Admin sees "Completed - Pending Approval"
+          contractorStatus: newContractorStatus, // Contractor sees "Completed"
           completionDate: document.getElementById("completionDate").value,
           checklist: {
               noMissingScrews: document.getElementById("checkScrews").checked,
