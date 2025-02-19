@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!pollingInterval) {
         pollingInterval = setInterval(async () => {
           await checkForJobUpdates();
-        }, 5000);
+        }, 2000);
       }
     } else if (role === "contractor") {
       contractorView.style.display = "block";
@@ -69,6 +69,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       populateContractorJobs(contractor);
       // Start polling for contractor view
       pollingInterval = setInterval(refreshContractorView, 5000);
+    }
+  }
+  async function updateJobStatus(jobId, newStatus) {
+    try {
+      const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!response.ok) throw new Error("Failed to update job status.");
+  
+      alert(`Job status updated to '${newStatus}'.`);
+  
+      // Reload jobs from server
+      await loadData();
+      populateAdminJobs(); // Refresh admin table
+    } catch (error) {
+      console.error("Error updating job status:", error);
+      alert("Failed to update the job status.");
     }
   }
 
@@ -148,25 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  async function updateJobStatus(jobId, newStatus) {
-    try {
-      const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (!response.ok) throw new Error("Failed to update job status.");
   
-      alert(`Job status updated to '${newStatus}'.`);
-  
-      // Reload jobs from server
-      await loadData();
-      populateAdminJobs(); // Refresh admin table
-    } catch (error) {
-      console.error("Error updating job status:", error);
-      alert("Failed to update the job status.");
-    }
-  }
   
 
   // Refresh contractor view (polling)
