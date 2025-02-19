@@ -245,6 +245,7 @@ if (currentUserRole === "contractor") {
   
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
+
   //function to move job in progess
   async function moveJobToInProgress(jobId) {
     try {
@@ -374,7 +375,7 @@ if (currentUserRole === "contractor") {
             <select id="jobStatus" required>
               <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
               <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
-              <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
+              <option value="Completed" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
             </select>
           </div>
           <div>

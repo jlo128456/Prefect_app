@@ -25,6 +25,36 @@
       "id": "6135"
     }
   ],
+  "machines": [
+    {
+      "machineId": "M001",
+      "machineType": "Note Counter",
+      "model": "SB5000",
+      "serialNumber": "NC123456",
+      "lastServiceDate": "2024-12-01"
+    },
+    {
+      "machineId": "M002",
+      "machineType": "Note Counter",
+      "model": "MIB5",
+      "serialNumber": "NC789012",
+      "lastServiceDate": "2024-11-15"
+    },
+    {
+      "machineId": "M003",
+      "machineType": "Coin Dispenser",
+      "model": "CMX02",
+      "serialNumber": "CD345678",
+      "lastServiceDate": "2024-11-20"
+    },
+    {
+      "machineId": "M004",
+      "machineType": "Note Counter",
+      "model": "SB5000",
+      "serialNumber": "NC567890",
+      "lastServiceDate": "2024-10-10"
+    }
+  ],
   "jobs": [
     {
       "id": "1",
@@ -32,15 +62,7 @@
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": [
-        {
-          "machineId": "M001",
-          "machineType": "Note Counter",
-          "model": "SB5000",
-          "serialNumber": "NC123456",
-          "lastServiceDate": "2024-12-01"
-        }
-      ],
+      "machines": ["M001"],
       "completionDate": "",
       "checklist": {
         "noMissingScrews": true,
@@ -61,22 +83,7 @@
       "customerName": "Sunny Bakery",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": [
-        {
-          "machineId": "M002",
-          "machineType": "Note Counter",
-          "model": "MIB5",
-          "serialNumber": "NC789012",
-          "lastServiceDate": "2024-11-15"
-        },
-        {
-          "machineId": "M003",
-          "machineType": "Coin Dispenser",
-          "model": "CMX02",
-          "serialNumber": "CD345678",
-          "lastServiceDate": "2024-11-20"
-        }
-      ],
+      "machines": ["M002", "M003"],
       "completionDate": "",
       "checklist": {
         "noMissingScrews": true,
@@ -97,15 +104,7 @@
       "customerName": "Greenfield Apartments",
       "contractor": "JeffL",
       "status": "Pending",
-      "machines": [
-        {
-          "machineId": "M004",
-          "machineType": "Note Counter",
-          "model": "SB5000",
-          "serialNumber": "NC567890",
-          "lastServiceDate": "2024-10-10"
-        }
-      ],
+      "machines": ["M004"],
       "completionDate": "",
       "checklist": {
         "noMissingScrews": false,
