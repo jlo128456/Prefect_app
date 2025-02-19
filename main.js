@@ -148,6 +148,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  async function updateJobStatus(jobId, newStatus) {
+    try {
+      const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!response.ok) throw new Error("Failed to update job status.");
+  
+      alert(`Job status updated to '${newStatus}'.`);
+  
+      // Reload jobs from server
+      await loadData();
+      populateAdminJobs(); // Refresh admin table
+    } catch (error) {
+      console.error("Error updating job status:", error);
+      alert("Failed to update the job status.");
+    }
+  }
+  
+
   // Refresh contractor view (polling)
   async function refreshContractorView() {
     try {
