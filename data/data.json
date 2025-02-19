@@ -43,10 +43,10 @@
       ],
       "completionDate": "",
       "checklist": {
-        "noMissingScrews": false,
-        "softwareUpdated": false,
-        "tested": false,
-        "approvedByManagement": false
+        "noMissingScrews": true,
+        "softwareUpdated": true,
+        "tested": true,
+        "approvedByManagement": true
       },
       "signature": "",
       "statusTimestamp": "",
@@ -77,17 +77,19 @@
           "lastServiceDate": "2024-11-20"
         }
       ],
-      "completionDate": "2025-02-09",
+      "completionDate": "",
       "checklist": {
-        "noMissingScrews": false,
-        "softwareUpdated": false,
-        "tested": false,
-        "approvedByManagement": false
+        "noMissingScrews": true,
+        "softwareUpdated": true,
+        "tested": true,
+        "approvedByManagement": true
       },
       "signature": "",
       "onsiteTime": "",
-      "contactName": "",
-      "workPerformed": ""
+      "contactName": "j",
+      "workPerformed": "",
+      "contractorStatus": "",
+      "statusTimestamp": ""
     },
     {
       "id": "3",
