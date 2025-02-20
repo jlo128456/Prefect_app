@@ -65,7 +65,7 @@
       "workOrder": "PA23455",
       "customerName": "Tom's Tavern",
       "contractor": "JeffL",
-      "status": "Completed - Pending Approval",
+      "status": "Approved",
       "machines": [
         {
           "id": "M001",
