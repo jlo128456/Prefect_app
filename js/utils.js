@@ -1,19 +1,38 @@
-function applyStatusColor(statusElement, status) {
-    const statusColors = {
-      "Pending": ["#FF4D4D", "white"],
-      "In Progress": ["#FFD700", "black"],
-      "Completed": ["#32CD32", "white"],
-      "Completed - Pending Approval": ["#FFA500", "white"],
-      "Approved": ["#4682B4", "white"]
-    };
-    const [bgColor, textColor] = statusColors[status] || ["white", "black"];
-    statusElement.style.backgroundColor = bgColor;
-    statusElement.style.color = textColor;
+// utils.js
+export function formatDateTime(dateString) {
+    if (!dateString) return "N/A";
+    if (typeof dateString !== "string") {
+      console.error("Invalid date format received:", dateString);
+      return "N/A";
+    }
+    // If already in DD/MM/YYYY..., just return
+    if (dateString.includes("/")) return dateString;
+  
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+  
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
   
-  function formatDateTime(dateString) {
-    const date = new Date(dateString);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} 
-            ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  export function applyStatusColor(statusElement, status) {
+    if (status === "Pending") {
+      statusElement.style.backgroundColor = "red";
+      statusElement.style.color = "white";
+    } else if (status === "In Progress") {
+      statusElement.style.backgroundColor = "yellow";
+      statusElement.style.color = "black";
+    } else if (status === "Completed") {
+      statusElement.style.backgroundColor = "green";
+      statusElement.style.color = "white";
+    } else if (status === "Completed - Pending Approval") {
+      statusElement.style.backgroundColor = "orange";
+      statusElement.style.color = "white";
+    }
   }
   
