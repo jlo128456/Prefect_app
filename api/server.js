@@ -1,17 +1,19 @@
-// server.js
+const express = require('express');
 const jsonServer = require('json-server');
 const path = require('path');
-const server = jsonServer.create();
-const router = jsonServer.router(path.join(__dirname, '..', 'data', 'data.json'));
-const middlewares = jsonServer.defaults();
 const cors = require('cors');
 
-// Enable CORS
-server.use(cors());
+const app = express();
 
-// Use JSON Server's default middlewares and router
-server.use(middlewares);
-server.use(router);
+// Serve static files from the public folder
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Export (no `listen()` call here)
-module.exports = server;
+const router = jsonServer.router(path.join(__dirname, '..', 'data', 'data.json'));
+const middlewares = jsonServer.defaults();
+
+app.use(cors());
+app.use(middlewares);
+app.use(router);
+
+// Instead of app.listen(), export the app for Vercel
+module.exports = app;
