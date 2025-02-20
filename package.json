@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "json-server": "^1.0.0-beta.3"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "name": "prefect_app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlo128456/Prefect_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jlo128456/Prefect_app/issues"
+  },
+  "homepage": "https://github.com/jlo128456/Prefect_app#readme",
+  "description": ""
+}
