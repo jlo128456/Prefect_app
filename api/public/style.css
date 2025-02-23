@@ -1,6 +1,6 @@
 /* General Body Styling */
 body {
-    background-image: url('./public/img/mound2.png'); /* Background image */
+    background-image: url('./img/mound2.png'); /* Background image */
     background-repeat: no-repeat;
     background-size: cover; /* Ensure the image covers the entire screen */
     background-attachment: fixed; /* Optional: Makes the background fixed while scrolling */
