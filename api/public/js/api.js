@@ -10,22 +10,26 @@ const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
  */
 export async function loadData() {
   try {
+    // Fetch from the Users bin
     const usersResponse = await fetch(USERS_BIN_URL, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
+    const usersData = await usersResponse.json(); // { record: { users: [ ... ] } }
+
+    // Fetch from the Jobs bin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
-    const usersData = await usersResponse.json();
-    const jobsData = await jobsResponse.json();
+    const jobsData = await jobsResponse.json(); // { record: { jobs: [ ... ] } }
 
-    // Update based on the JSON structure:
-    // If your JSON is { "users": [...] } inside "record"
-    G.users = usersData.record.users; 
-    G.jobs = jobsData.record;  // Assuming jobs is already an array
-    console.log("Data loaded successfully.");
+    // Assign the arrays to your global variables
+    G.users = usersData.record.users; // Make sure "users" matches your bin's structure
+    G.jobs = jobsData.record.jobs;    // Same for "jobs"
+
+    console.log("Users loaded:", G.users);
+    console.log("Jobs loaded:", G.jobs);
   } catch (error) {
     console.error("Error loading JSON:", error);
   }
