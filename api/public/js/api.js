@@ -6,8 +6,8 @@ import { G } from './globals.js';
  */
 export async function loadData() {
   try {
-    const usersResponse = await fetch('http://localhost:3000/users');
-    const jobsResponse = await fetch('http://localhost:3000/jobs');
+    const usersResponse = await fetch('https://prefect-app.vercel.app/api/users');
+    const jobsResponse = await fetch('https://prefect-app.vercel.app/api//jobs');
     G.users = await usersResponse.json();
     G.jobs = await jobsResponse.json();
     console.log("Data loaded successfully.");
@@ -21,7 +21,7 @@ export async function loadData() {
  */
 export async function updateJobStatus(jobId, newStatus) {
   try {
-    const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+    const response = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus })
@@ -43,7 +43,7 @@ export async function updateJobStatus(jobId, newStatus) {
  */
 export async function checkForJobUpdates() {
   try {
-    const response = await fetch("http://localhost:3000/jobs");
+    const response = await fetch("https://prefect-app.vercel.app/api/jobs");
     const latestJobs = await response.json();
     // Compare with current G.jobs
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
@@ -61,7 +61,7 @@ export async function checkForJobUpdates() {
  */
 export async function refreshContractorView() {
   try {
-    const jobsResponse = await fetch("http://localhost:3000/jobs");
+    const jobsResponse = await fetch("https://prefect-app.vercel.app/api/jobs");
     G.jobs = await jobsResponse.json();
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     // Re-populate contractor jobs
@@ -77,7 +77,7 @@ export async function refreshContractorView() {
 export async function deleteJob(jobId) {
   if (confirm("Are you sure you want to delete this job?")) {
     try {
-      await fetch(`http://localhost:3000/jobs/${jobId}`, { method: "DELETE" });
+      await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, { method: "DELETE" });
       alert("Job deleted successfully.");
       // Optionally refresh or showDashboard again
     } catch (error) {

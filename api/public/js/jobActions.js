@@ -7,7 +7,7 @@ import { populateAdminJobs, populateContractorJobs, showDashboard } from './dash
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    const jobResponse = await fetch(`http://localhost:3000/jobs/${jobId}`);
+    const jobResponse = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`);
     const job = await jobResponse.json();
     if (!job) {
       alert("Job not found.");
@@ -39,7 +39,7 @@ export async function moveJobToInProgress(jobId) {
     }
 
     // PATCH request
-    const response = await fetch(`http://localhost:3000/jobs/${jobId}`, {
+    const response = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -53,7 +53,7 @@ export async function moveJobToInProgress(jobId) {
 
     alert(statusMessage);
     // Refresh local job list
-    const jobsResponse = await fetch("http://localhost:3000/jobs");
+    const jobsResponse = await fetch("https://prefect-app.vercel.app/api/jobs");
     G.jobs = await jobsResponse.json();
     // Re-populate both admin and contractor views
     populateAdminJobs();
@@ -77,7 +77,7 @@ export async function showUpdateJobForm(jobId) {
   // Fetch available machines
   let availableMachines = [];
   try {
-    const machinesResponse = await fetch("http://localhost:3000/machines");
+    const machinesResponse = await fetch("https://prefect-app.vercel.app/api/machines");
     availableMachines = await machinesResponse.json();
   } catch (error) {
     console.error("Error fetching machines:", error);
@@ -340,7 +340,7 @@ export async function showUpdateJobForm(jobId) {
 
     // Send PATCH
     try {
-      await fetch(`http://localhost:3000/jobs/${job.id}`, {
+      await fetch(`https://prefect-app.vercel.app/api/jobs/${job.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedJob),
