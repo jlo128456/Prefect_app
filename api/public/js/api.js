@@ -2,8 +2,8 @@
 import { G } from './globals.js';
 
 // Replace these with your actual jsonbin IDs.
-const USERS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb00c2ad19ca34f80efa55 >';
-const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb011be41b4d34e4993fc2 >';
+const USERS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00c2ad19ca34f80efa55';
+const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
 
 /**
  * Load JSON data (users, jobs) from jsonbin and store in globals.

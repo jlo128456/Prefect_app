@@ -3,8 +3,8 @@ import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 
 // Replace these with your actual jsonbin IDs.
-const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb011be41b4d34e4993fc2 >';
-const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb00f1acd3cb34a8ed73fa >';
+const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
+const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00f1acd3cb34a8ed73fa';
 
 /**
  * Move job from Pending -> In Progress -> Completed - Pending Approval
