@@ -6,8 +6,7 @@ const cors = require('cors');
 
 const app = express();
 
-// Serve static files from a folder (e.g., '../public')
-app.use(express.static(path.join(__dirname, '..', 'public')));
+
 
 // Then set up json-server
 const router = jsonServer.router(path.join(__dirname, '..', 'data', 'data.json'));
@@ -16,5 +15,5 @@ app.use(cors());
 app.use(middlewares);
 app.use(router);
 
-// Export for Vercel (no app.listen here)
+// Export for Vercel 
 module.exports = app;
