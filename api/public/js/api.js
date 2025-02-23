@@ -1,15 +1,26 @@
 // api.js
 import { G } from './globals.js';
 
+// Replace these with your actual jsonbin IDs.
+const USERS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb00c2ad19ca34f80efa55 >';
+const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb011be41b4d34e4993fc2 >';
+
 /**
- * Load JSON data (users, jobs) from the server and store in globals.
+ * Load JSON data (users, jobs) from jsonbin and store in globals.
  */
 export async function loadData() {
   try {
-    const usersResponse = await fetch('https://prefect-app.vercel.app/api/users');
-    const jobsResponse = await fetch('https://prefect-app.vercel.app/api//jobs');
-    G.users = await usersResponse.json();
-    G.jobs = await jobsResponse.json();
+    const usersResponse = await fetch(USERS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const jobsResponse = await fetch(JOBS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    // Assuming jsonbin returns an object with your data in a property (e.g. "record").
+    G.users = (await usersResponse.json()).record;
+    G.jobs = (await jobsResponse.json()).record;
     console.log("Data loaded successfully.");
   } catch (error) {
     console.error("Error loading JSON:", error);
@@ -17,19 +28,38 @@ export async function loadData() {
 }
 
 /**
- * Update job status (e.g. Approve, Reject) by PATCHing to the server.
+ * Update job status (e.g. Approve, Reject) by PATCHing to jsonbin.
+ *
+ * Note: jsonbin does not support PATCH natively. You may need to fetch the data,
+ * update the desired job, and then PUT the whole record back to jsonbin.
  */
 export async function updateJobStatus(jobId, newStatus) {
   try {
-    const response = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus })
+    // Fetch the current jobs data
+    const response = await fetch(JOBS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
-    if (!response.ok) throw new Error("Failed to update job status.");
+    const jobsData = (await response.json()).record;
+
+    // Update the job status locally
+    const updatedJobs = jobsData.map(job => {
+      if (job.id === jobId) {
+        return { ...job, status: newStatus };
+      }
+      return job;
+    });
+
+    // Write the updated jobs data back to jsonbin with a PUT request
+    const putResponse = await fetch(JOBS_BIN_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ record: updatedJobs })
+    });
+    if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(`Job status updated to '${newStatus}'.`);
-    // Reload jobs from server
+    // Reload jobs from jsonbin
     await loadData();
     // Optionally re-populate the admin table after reload
   } catch (error) {
@@ -43,8 +73,11 @@ export async function updateJobStatus(jobId, newStatus) {
  */
 export async function checkForJobUpdates() {
   try {
-    const response = await fetch("https://prefect-app.vercel.app/api/jobs");
-    const latestJobs = await response.json();
+    const response = await fetch(JOBS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const latestJobs = (await response.json()).record;
     // Compare with current G.jobs
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
       console.log("Job list updated. Refreshing admin dashboard...");
@@ -61,8 +94,11 @@ export async function checkForJobUpdates() {
  */
 export async function refreshContractorView() {
   try {
-    const jobsResponse = await fetch("https://prefect-app.vercel.app/api/jobs");
-    G.jobs = await jobsResponse.json();
+    const jobsResponse = await fetch(JOBS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    G.jobs = (await jobsResponse.json()).record;
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     // Re-populate contractor jobs
     console.log("Contractor view refreshed with updated job data.");
@@ -73,11 +109,31 @@ export async function refreshContractorView() {
 
 /**
  * Delete a job (Admin function).
+ *
+ * Note: As with updating, jsonbin does not support DELETE for a single entry.
+ * Instead, fetch the data, remove the job locally, and PUT the updated record back.
  */
 export async function deleteJob(jobId) {
   if (confirm("Are you sure you want to delete this job?")) {
     try {
-      await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, { method: "DELETE" });
+      // Fetch current jobs
+      const response = await fetch(JOBS_BIN_URL, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const jobsData = (await response.json()).record;
+
+      // Remove the job with the given id
+      const updatedJobs = jobsData.filter(job => job.id !== jobId);
+
+      // Write the updated data back to jsonbin
+      const putResponse = await fetch(JOBS_BIN_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ record: updatedJobs })
+      });
+      if (!putResponse.ok) throw new Error("Failed to delete job.");
+
       alert("Job deleted successfully.");
       // Optionally refresh or showDashboard again
     } catch (error) {

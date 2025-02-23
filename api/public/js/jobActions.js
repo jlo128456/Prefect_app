@@ -2,22 +2,30 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 
+// Replace these with your actual jsonbin IDs.
+const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb011be41b4d34e4993fc2 >';
+const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/<67bb00f1acd3cb34a8ed73fa >';
+
 /**
  * Move job from Pending -> In Progress -> Completed - Pending Approval
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    const jobResponse = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`);
-    const job = await jobResponse.json();
+    // Fetch entire jobs array from jsonbin
+    const jobsResponse = await fetch(JOBS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const jobsData = (await jobsResponse.json()).record;
+    const job = jobsData.find(j => j.id.toString() === jobId.toString());
     if (!job) {
       alert("Job not found.");
       return;
     }
-    let updatedStatus;
-    let contractorStatus;
-    let statusMessage;
-    
-    // Generate timestamp
+
+    let updatedStatus, contractorStatus, statusMessage;
+
+    // Generate formatted timestamp
     const currentTime = new Date();
     const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
       String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
@@ -38,24 +46,31 @@ export async function moveJobToInProgress(jobId) {
       return;
     }
 
-    // PATCH request
-    const response = await fetch(`https://prefect-app.vercel.app/api/jobs/${jobId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: updatedStatus,
-        contractorStatus: contractorStatus,
-        statusTimestamp: formattedTime,
-        onsiteTime: job.onsiteTime === "N/A" ? formattedTime : job.onsiteTime
-      })
+    // Update the specific job in the jobs array
+    const updatedJobs = jobsData.map(j => {
+      if (j.id.toString() === jobId.toString()) {
+        return {
+          ...j,
+          status: updatedStatus,
+          contractorStatus: contractorStatus,
+          statusTimestamp: formattedTime,
+          onsiteTime: j.onsiteTime === "N/A" ? formattedTime : j.onsiteTime
+        };
+      }
+      return j;
     });
-    if (!response.ok) throw new Error("Failed to update job status.");
+
+    // PUT the updated jobs array back to jsonbin
+    const putResponse = await fetch(JOBS_BIN_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ record: updatedJobs })
+    });
+    if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(statusMessage);
-    // Refresh local job list
-    const jobsResponse = await fetch("https://prefect-app.vercel.app/api/jobs");
-    G.jobs = await jobsResponse.json();
-    // Re-populate both admin and contractor views
+    // Update the global jobs list and re-populate both admin and contractor views
+    G.jobs = updatedJobs;
     populateAdminJobs();
     populateContractorJobs(job.contractor);
   } catch (error) {
@@ -68,22 +83,26 @@ export async function moveJobToInProgress(jobId) {
  * Show extended job update form (with signature, machine selection, etc.).
  */
 export async function showUpdateJobForm(jobId) {
+  // Find job in global jobs array (assumes jobs have been loaded already)
   const job = G.jobs.find(j => j.id.toString() === jobId.toString());
   if (!job) {
     alert("Job not found!");
     return;
   }
 
-  // Fetch available machines
+  // Fetch available machines from jsonbin
   let availableMachines = [];
   try {
-    const machinesResponse = await fetch("https://prefect-app.vercel.app/api/machines");
-    availableMachines = await machinesResponse.json();
+    const machinesResponse = await fetch(MACHINES_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    availableMachines = (await machinesResponse.json()).record;
   } catch (error) {
     console.error("Error fetching machines:", error);
   }
 
-  // Remove existing form/overlay if present
+  // Remove any existing form or overlay
   const existingForm = document.getElementById("updateJobContainer");
   const existingOverlay = document.getElementById("modalOverlay");
   if (existingForm) existingForm.remove();
@@ -118,7 +137,7 @@ export async function showUpdateJobForm(jobId) {
       </select>
     `;
 
-  // Build the form
+  // Build the update form HTML
   const formHTML = `
     <div id="updateJobContainer">
       <h3>Update Work Order: ${job.workOrder}</h3>
@@ -139,7 +158,6 @@ export async function showUpdateJobForm(jobId) {
           <label>Labour Time (hours)</label>
           <input type="number" id="labourTime" min="0" step="0.5" value="${job.labourTime || 0}" required>
         </div>
-
         <div>
           <label>Work Performed</label>
           <select id="workPerformedDropdown">
@@ -152,7 +170,6 @@ export async function showUpdateJobForm(jobId) {
           </select>
           <textarea id="workPerformed" rows="3" required>${job.workPerformed || ""}</textarea>
         </div>
-
         <div>
           <label>Select Machines</label>
           <select id="machineSelect">
@@ -161,7 +178,6 @@ export async function showUpdateJobForm(jobId) {
           </select>
           <button type="button" id="addMachine">Add Machine</button>
         </div>
-
         <div id="machineList">
           ${
             Array.isArray(job.machines)
@@ -182,17 +198,14 @@ export async function showUpdateJobForm(jobId) {
               : ""
           }
         </div>
-
         <div>
           <label>Job Status</label>
           ${statusField}
         </div>
-
         <div>
           <label>Completion Date</label>
           <input type="date" id="completionDate" value="${job.completionDate || ""}" required>
         </div>
-
         <div>
           <label>Checklist</label>
           <div>
@@ -202,30 +215,28 @@ export async function showUpdateJobForm(jobId) {
             <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? "checked" : ""}> Approved by Management
           </div>
         </div>
-
         <div>
           <label>Signature</label>
           <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
           <button type="button" id="clearSignature">Clear Signature</button>
         </div>
-
         <button type="submit">Save</button>
       </form>
       <button type="button" id="backToDashboard">Back to Dashboard</button>
     </div>
   `;
 
-  // Insert form into DOM
+  // Insert form into the DOM
   const updateFormContainer = document.createElement("div");
   updateFormContainer.innerHTML = formHTML;
   document.body.appendChild(updateFormContainer);
 
-  // --- Signature Pad ---
+  // --- Signature Pad Setup ---
   const signatureCanvas = document.getElementById("signatureCanvas");
   const ctx = signatureCanvas.getContext("2d");
   let isDrawing = false;
 
-  // Load existing signature if present
+  // Load existing signature if available
   if (job.signature) {
     const img = new Image();
     img.src = job.signature;
@@ -251,7 +262,7 @@ export async function showUpdateJobForm(jobId) {
     ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
   });
 
-  // Work Performed dropdown
+  // Work Performed dropdown logic
   document.getElementById("workPerformedDropdown").addEventListener("change", function() {
     const selectedPhrase = this.value;
     const textarea = document.getElementById("workPerformed");
@@ -260,7 +271,7 @@ export async function showUpdateJobForm(jobId) {
     }
   });
 
-  // Add Machine
+  // Add Machine functionality
   document.getElementById("addMachine").addEventListener("click", () => {
     const machineSelect = document.getElementById("machineSelect");
     const selectedMachineId = machineSelect.value;
@@ -289,20 +300,20 @@ export async function showUpdateJobForm(jobId) {
     machineList.appendChild(machineEntry);
   });
 
-  // Remove Machine
+  // Remove Machine functionality
   document.getElementById("machineList").addEventListener("click", (event) => {
     if (event.target.classList.contains("remove-machine")) {
       event.target.parentElement.remove();
     }
   });
 
-  // Handle form submission (save job updates)
+  // Handle form submission: update the job and write back the updated jobs array to jsonbin
   document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     let newStatus = document.getElementById("jobStatus").value;
     let newContractorStatus = newStatus;
 
-    // If contractor is finishing job, set status to "Completed - Pending Approval"
+    // For contractors, if finishing the job, adjust statuses
     if (G.currentUserRole === "contractor" && newStatus === "Completed") {
       newStatus = "Completed - Pending Approval";
       newContractorStatus = "Completed";
@@ -316,10 +327,10 @@ export async function showUpdateJobForm(jobId) {
       partsUsed: machine.querySelector(".machine-parts").value,
     }));
 
-    // Convert signature to base64
+    // Convert the signature to base64
     const signatureData = signatureCanvas.toDataURL("image/png");
 
-    const updatedJob = {
+    const updatedJobData = {
       customerName: document.getElementById("customerName").value.trim(),
       contactName: document.getElementById("contactName").value.trim(),
       workPerformed: document.getElementById("workPerformed").value.trim(),
@@ -338,13 +349,30 @@ export async function showUpdateJobForm(jobId) {
       machines: updatedMachines,
     };
 
-    // Send PATCH
     try {
-      await fetch(`https://prefect-app.vercel.app/api/jobs/${job.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedJob),
+      // Fetch current jobs from jsonbin
+      const jobsResponse = await fetch(JOBS_BIN_URL, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       });
+      const jobsData = (await jobsResponse.json()).record;
+
+      // Update the specific job with the new data
+      const updatedJobs = jobsData.map(j => {
+        if (j.id.toString() === job.id.toString()) {
+          return { ...j, ...updatedJobData };
+        }
+        return j;
+      });
+
+      // PUT the updated jobs array back to jsonbin
+      const putResponse = await fetch(JOBS_BIN_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ record: updatedJobs })
+      });
+      if (!putResponse.ok) throw new Error("Failed to update job.");
+
       alert("Job updated successfully and submitted for admin approval.");
       updateFormContainer.remove();
       modalOverlay.remove();
@@ -355,7 +383,7 @@ export async function showUpdateJobForm(jobId) {
     }
   });
 
-  // Back to Dashboard
+  // Back to Dashboard button
   document.getElementById("backToDashboard").addEventListener("click", () => {
     updateFormContainer.remove();
     modalOverlay.remove();
