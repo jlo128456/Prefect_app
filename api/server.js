@@ -1,8 +1,8 @@
 // api/server.js
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const jsonServer = require('json-server');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import jsonServer from 'json-server';
 
 const app = express();
 
@@ -18,4 +18,4 @@ app.use(cors());
 app.use(middlewares);
 app.use(router);
 
-module.exports = app;
+export default app;
