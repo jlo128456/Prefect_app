@@ -1,0 +1,281 @@
+/* General Body Styling */
+body {
+    background-image: url('./public/img/mound2.png'); /* Background image */
+    background-repeat: no-repeat;
+    background-size: cover; /* Ensure the image covers the entire screen */
+    background-attachment: fixed; /* Optional: Makes the background fixed while scrolling */
+    background-position: center; /* Keep the image centred */
+    margin: 0; /* Remove default margins */
+    padding: 0; /* Remove default padding */
+    font-family: Arial, sans-serif; /* Set default font */
+    min-height: 100vh; /* Ensure the content spans full height of the viewport */
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Column layout */
+    align-items: center; /* Center horizontally */
+    justify-content: space-between; /* Spread content vertically */
+}
+
+#modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Increase transparency for better contrast */
+    z-index: 999;
+  }
+  
+  #updateJobContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow for emphasis */
+    border-radius: 10px;
+    width: 450px; /* Consistent width */
+    max-width: 90%;
+    overflow: hidden;
+  }
+  
+  #updateJobContainer h3 {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  #updateJobContainer button {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  
+/* Header Styling */
+header {
+    color: black; /* Black text */
+    padding: 1.5rem 0; /* Vertical padding */
+    text-align: center; /* Center-align text */
+    width: 100%; /* Full width */
+    }
+
+header h1 {
+    font-size: 2.5rem; /* Large title font size */
+    margin: 0.5rem 0; /* Add space around text */
+}
+
+header p {
+    font-size: 1.1rem; /* Smaller subtitle */
+    margin: 0; /* Remove extra space */
+}
+
+/* Main Content Styling */
+main {
+    width: 100%; /* Full width */
+    max-width: 800px; /* Restrict maximum width */
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    padding: 20px;
+    gap: 20px; /* Add spacing between sections */
+}
+
+/* Login Form Styling */
+form {
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
+    padding: 20px; /* Space inside form */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
+    max-width: 400px; /* Maximum width for form */
+    width: 100%; /* Full width for responsiveness */
+    margin-bottom: 30px; /* Add space below form */
+}
+
+form .form-control {
+    border: 1px solid #ccc; /* Light grey border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 10px; /* Inner spacing */
+    margin-bottom: 15px; /* Space between fields */
+    font-size: 1rem; /* Standard font size */
+}
+
+/* Button Styling */
+form button {
+    background-color: #007bff; /* Blue button */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 10px; /* Padding inside button */
+    font-size: 1rem; /* Standard font size */
+    width: 100%; /* Full width button */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth hover transition */
+}
+
+form button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+.form-check {
+    margin-bottom: 10px; /* Add spacing between each checklist item */
+  }
+  
+  .form-check-input {
+    margin-right: 10px; /* Add spacing between checkbox and label */
+  }
+
+/* Ensure the canvas aligns with the form fields */
+#signatureCanvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 0.5rem;
+  }
+  
+  /* Center the 'Clear Signature' button */
+  #clearSignature {
+    margin-top: 10px;
+    display: block;
+  }  
+
+/* Dashboard Section Styling */
+#adminView, #contractorView {
+    display: none; /* Hide by default */
+    flex-direction: column; /* Stack sections vertically */
+    align-items: center; /* Center-align content */
+    text-align: left; /* Align text to the left */
+    width: 100%;
+    max-width: 800px; /* Restrict maximum width */
+    padding: 20px;
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    gap: 20px; /* Space between elements inside */
+}
+
+/* Table Styling */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling for tables */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* Remove default spacing */
+    margin-top: 10px;
+}
+
+table th, table td {
+    border: 1px solid #ccc; /* Light grey border */
+    padding: 10px;
+    text-align: left; /* Left-align table text */
+}
+
+table th {
+    background-color: #f8f9fa; /* Light grey background for header */
+    font-weight: bold;
+}
+
+/* Footer Styling */
+footer {
+    text-align: center; /* Center-align text and logo */
+    padding: 20rem 0; /* Vertical padding */
+    width: 100%; /* Full width */
+    font-size: 0.9rem; /* Smaller text size */
+    color: #6c757d; /* Muted grey text */
+    margin-top: auto; /* Push footer to the bottom */
+}
+
+footer p {
+    margin: 0; /* Remove extra spacing */
+}
+
+/* Footer Logo Styling */
+.footer-logo {
+    display: block; /* Ensure the image is treated as a block element */
+    margin: 10px auto 0; /* Center it horizontally and add spacing above */
+    max-width: 50px; /* Adjust size as necessary */
+    height: auto; /* Maintain aspect ratio */
+}
+.form-horizontal .form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .form-horizontal .form-group label {
+    text-align: right;
+    margin-bottom: 0;
+    padding-right: 10px;
+    flex: 0 0 25%; /* Adjust the label width */
+  }
+  
+  .form-horizontal .form-group .col-sm-9 {
+    flex: 1;
+  }
+  
+  .form-horizontal .form-control {
+    width: 100%;
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+
+/* Responsive Design for Mobile Screens */
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 1.8rem; /* Smaller font size for title */
+    }
+
+    header p {
+        font-size: 1rem; /* Adjust subtitle font size */
+    }
+
+    form {
+        max-width: 90%; /* Use most of the screen width */
+        padding: 15px; /* Reduce padding */
+    }
+
+    footer {
+        font-size: 0.8rem; /* Adjust footer text size */
+    }
+
+    #adminView, #contractorView {
+        padding: 15px; /* Reduce padding for smaller screens */
+        max-width: 100%; /* Full width for small devices */
+    }
+
+    table th, table td {
+        font-size: 0.9rem; /* Adjust table font size */
+    }
+}
+/* Adjust Background for Smaller Screens */
+@media (max-width: 1200px) {
+    body {
+        background-size: contain; /* Switch to contain for smaller screens */
+        background-position: center top; /* Focus on the top */
+    }
+}
+
+@media (max-width: 800px) {
+    body {
+        background-size: contain; /* Keep the image within bounds */
+        background-position: top center; /* Ensure visibility of important parts */
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        background-size: contain; /* Ensure it fits within the smallest screens */
+        background-position: center; /* Keep it centered */
+    }
+}
+/* Adjust for smaller screens */
+@media (max-width: 768px) {
+    body {
+        background-size: contain; /* Adjust the size for smaller screens */
+        background-position: top; /* Align to the top for mobile */
+    }
+}
