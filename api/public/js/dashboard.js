@@ -35,6 +35,7 @@ export function showDashboard(role) {
     }
   } else if (role === "contractor") {
     G.contractorView.style.display = "block";
+    // In case you only have one contractor, this finds them by role
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     populateContractorJobs(contractor);
     // Start polling for contractor view
@@ -50,6 +51,13 @@ export function showDashboard(role) {
  */
 export function populateAdminJobs() {
   G.adminJobList.innerHTML = "";
+
+  // Check if G.jobs is actually an array
+  if (!Array.isArray(G.jobs)) {
+    console.error("G.jobs is not an array. Current value:", G.jobs);
+    return;
+  }
+
   G.jobs.forEach(job => {
     const lastUpdated = job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A";
     const row = document.createElement("tr");
@@ -88,11 +96,19 @@ export function populateAdminJobs() {
  */
 export function populateContractorJobs(contractor) {
   G.contractorJobList.innerHTML = "";
+
+  // Check if G.jobs is actually an array
+  if (!Array.isArray(G.jobs)) {
+    console.error("G.jobs is not an array. Current value:", G.jobs);
+    return;
+  }
+
   const contractorJobs = G.jobs.filter(job => job.contractor === contractor);
   if (contractorJobs.length === 0) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
   }
+
   contractorJobs.forEach(job => {
     const displayStatus = job.contractorStatus || job.status;
     const row = document.createElement("tr");
