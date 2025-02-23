@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup json-server to serve from ./data/data.json
 const router = jsonServer.router(path.join(__dirname, 'data', 'data.json'));
-console.log('Looking for data.json at:', dataPath);
+console.log('Resolved data.json path:', path.join(__dirname, 'data', 'data.json'));
 const middlewares = jsonServer.defaults();
 
 app.use(cors());
