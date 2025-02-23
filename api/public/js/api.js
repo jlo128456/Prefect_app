@@ -18,9 +18,13 @@ export async function loadData() {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
-    // Assuming jsonbin returns an object with your data in a property (e.g. "record").
-    G.users = (await usersResponse.json()).record;
-    G.jobs = (await jobsResponse.json()).record;
+    const usersData = await usersResponse.json();
+    const jobsData = await jobsResponse.json();
+
+    // Update based on the JSON structure:
+    // If your JSON is { "users": [...] } inside "record"
+    G.users = usersData.record.users; 
+    G.jobs = jobsData.record;  // Assuming jobs is already an array
     console.log("Data loaded successfully.");
   } catch (error) {
     console.error("Error loading JSON:", error);
