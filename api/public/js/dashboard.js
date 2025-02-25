@@ -134,7 +134,7 @@ export function populateContractorJobs(contractor) {
     // Prevent the event from bubbling up, in case other events are attached on the row.
     e.stopPropagation();
     // Display a popup with the required work information.
-    alert(`Required Work: ${job.requiredWork}`);
+    alert(`Required Work: ${job.workRequired}`);
     });
 
     G.contractorJobList.appendChild(row);
