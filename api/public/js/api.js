@@ -41,6 +41,9 @@ export async function loadData() {
  * Note: jsonbin does not support PATCH natively. You need to fetch the data,
  * update the desired job, and then PUT the whole record back to jsonbin.
  */
+/**
+ * Update a job's status.
+ */
 export async function updateJobStatus(jobId, newStatus) {
   try {
     // Fetch the current jobs data and extract the jobs array
@@ -49,7 +52,7 @@ export async function updateJobStatus(jobId, newStatus) {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const jobsData = fetchedData.record.jobs; // Get the array
+    const jobsData = fetchedData.record.jobs; // Get the array of jobs
 
     // Update the job status locally
     const updatedJobs = jobsData.map(job => {
@@ -59,8 +62,8 @@ export async function updateJobStatus(jobId, newStatus) {
       return job;
     });
 
-    // Write the updated jobs data back to jsonbin with a PUT request
-    // Note: We must send back the same structure: { record: { jobs: [...] } }
+    // PUT the updated jobs array back to JSONbin,
+    // preserving the structure: { record: { jobs: [...] } }
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -69,9 +72,8 @@ export async function updateJobStatus(jobId, newStatus) {
     if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(`Job status updated to '${newStatus}'.`);
-    // Reload jobs from jsonbin
+    // Optionally reload jobs from JSONbin (for example, call a loadData function)
     await loadData();
-    // Optionally re-populate the admin table after reload
   } catch (error) {
     console.error("Error updating job status:", error);
     alert("Failed to update the job status.");
@@ -88,13 +90,13 @@ export async function checkForJobUpdates() {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const latestJobs = fetchedData.record.jobs; // Extract the array
+    const latestJobs = fetchedData.record.jobs; // Extract the jobs array
 
-    // Compare with current G.jobs
+    // Compare with current global G.jobs (ensure G.jobs is defined elsewhere)
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
       console.log("Job list updated. Refreshing admin dashboard...");
       G.jobs = latestJobs;
-      // Re-populate admin dashboard here if desired
+      // Re-populate the admin dashboard if desired
     }
   } catch (error) {
     console.error("Error checking for job updates:", error);
@@ -102,7 +104,7 @@ export async function checkForJobUpdates() {
 }
 
 /**
- * Refresh contractor view (polling).
+ * Refresh the contractor view (polling).
  */
 export async function refreshContractorView() {
   try {
@@ -112,8 +114,10 @@ export async function refreshContractorView() {
     });
     const fetchedData = await jobsResponse.json();
     G.jobs = fetchedData.record.jobs; // Extract the jobs array
+
+    // Find the contractor username (if needed)
     const contractor = G.users.find(u => u.role === "contractor")?.username;
-    // Re-populate contractor jobs
+    // Re-populate contractor jobs if desired
     console.log("Contractor view refreshed with updated job data.");
   } catch (error) {
     console.error("Error refreshing contractor view:", error);
@@ -123,7 +127,7 @@ export async function refreshContractorView() {
 /**
  * Delete a job (Admin function).
  *
- * Note: jsonbin does not support DELETE for a single entry.
+ * Note: JSONbin does not support DELETE for a single entry.
  * Instead, fetch the data, remove the job locally, and PUT the updated record back.
  */
 export async function deleteJob(jobId) {
@@ -140,7 +144,7 @@ export async function deleteJob(jobId) {
       // Remove the job with the given id
       const updatedJobs = jobsData.filter(job => job.id !== jobId);
 
-      // Write the updated data back to jsonbin (preserving structure)
+      // Write the updated data back to JSONbin (preserving structure)
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -149,7 +153,7 @@ export async function deleteJob(jobId) {
       if (!putResponse.ok) throw new Error("Failed to delete job.");
 
       alert("Job deleted successfully.");
-      // Optionally refresh or showDashboard again
+      // Optionally, refresh the dashboard or call loadData again
     } catch (error) {
       console.error("Error deleting job:", error);
       alert("Failed to delete the job.");
