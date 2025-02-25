@@ -80,7 +80,7 @@ export async function moveJobToInProgress(jobId) {
   }
 }
 
-
+0
 /**
  * Show extended job update form (with signature, machine selection, etc.).
  */

@@ -126,6 +126,17 @@ export function populateContractorJobs(contractor) {
         <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Job Completed</button>
       </td>
     `;
+
+    // Add click event only on the job number cell
+    const jobNumberCell = row.querySelector("td:first-child");
+    jobNumberCell.style.cursor = "pointer"; // Optional: indicate the cell is clickable
+    jobNumberCell.addEventListener("click", (e) => {
+    // Prevent the event from bubbling up, in case other events are attached on the row.
+    e.stopPropagation();
+    // Display a popup with the required work information.
+    alert(`Required Work: ${job.requiredWork}`);
+    });
+
     G.contractorJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
