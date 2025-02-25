@@ -357,7 +357,8 @@ export async function showUpdateJobForm(jobId) {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      const jobsData = (await jobsResponse.json()).record;
+      // Since the JSON structure is { "jobs": [...] }
+      const jobsData = (await jobsResponse.json()).jobs;
     
       // Update the specific job with the new data (using job.id and updatedJobData)
       const updatedJobs = jobsData.map(j => {
@@ -368,10 +369,11 @@ export async function showUpdateJobForm(jobId) {
       });
     
       // PUT the updated jobs array back to JSONbin
+      // Note: The data structure must match the JSONbin structure, i.e., { "jobs": [...] }
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ record: updatedJobs })
+        body: JSON.stringify({ jobs: updatedJobs })
       });
       if (!putResponse.ok) throw new Error("Failed to update job.");
     
