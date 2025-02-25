@@ -127,7 +127,7 @@ export function populateContractorJobs(contractor) {
       </td>
     `;
 
-     // Select the first <td> (Work Order cell) and make it clickable
+    // Select the first <td> (Work Order cell) and make it clickable
   const workOrderCell = row.querySelector("td:first-child");
   workOrderCell.style.cursor = "pointer"; // optional, visually indicates clickable
   workOrderCell.addEventListener("click", (e) => {
@@ -137,9 +137,6 @@ export function populateContractorJobs(contractor) {
     alert(`Work Required: ${job.workRequired}`);
   });
 
-  // Finally, append this row to your table body
-  contractorJobList.appendChild(row);
-});
 
     G.contractorJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
