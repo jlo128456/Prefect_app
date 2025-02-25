@@ -127,15 +127,19 @@ export function populateContractorJobs(contractor) {
       </td>
     `;
 
-    // Add click event only on the job number cell
-    const jobNumberCell = row.querySelector("td:first-child");
-    jobNumberCell.style.cursor = "pointer"; // Optional: indicate the cell is clickable
-    jobNumberCell.addEventListener("click", (e) => {
-    // Prevent the event from bubbling up, in case other events are attached on the row.
+     // Select the first <td> (Work Order cell) and make it clickable
+  const workOrderCell = row.querySelector("td:first-child");
+  workOrderCell.style.cursor = "pointer"; // optional, visually indicates clickable
+  workOrderCell.addEventListener("click", (e) => {
+    // Stop the event from triggering any row-level click, if present
     e.stopPropagation();
-    // Display a popup with the required work information.
-    alert(`Required Work: ${job.workRequired}`);
-    });
+    // Display the "workRequired" from the JSON
+    alert(`Work Required: ${job.workRequired}`);
+  });
+
+  // Finally, append this row to your table body
+  contractorJobList.appendChild(row);
+});
 
     G.contractorJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
