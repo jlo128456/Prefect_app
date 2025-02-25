@@ -41,7 +41,7 @@ export async function loadData() {
  * Note: jsonbin does not support PATCH natively. You need to fetch the data,
  * update the desired job, and then PUT the whole record back to jsonbin.
  */
-**
+/**
  * Update a job's status.
  */
 export async function updateJobStatus(jobId, newStatus) {
