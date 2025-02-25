@@ -115,6 +115,7 @@ export function populateContractorJobs(contractor) {
     row.innerHTML = `
       <td>${job.workOrder}</td>
       <td>${job.customerName}</td>
+      <td>${job.requiredDate}</td> <!-- New column for required date -->
       <td class="status-cell">${displayStatus}</td>
       <td>
         ${

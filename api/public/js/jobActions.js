@@ -11,21 +11,24 @@ const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00f1acd3cb34a8ed73fa';
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    // Fetch entire jobs array from jsonbin
+    // Fetch the entire jobs array from jsonbin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
-    const jobsData = (await jobsResponse.json()).record;
+    // Extract the jobs array from the record object
+    const jobsData = (await jobsResponse.json()).record.jobs;
     const job = jobsData.find(j => j.id.toString() === jobId.toString());
     if (!job) {
       alert("Job not found.");
       return;
     }
 
-    let updatedStatus, contractorStatus, statusMessage;
+    let updatedStatus;
+    let contractorStatus;
+    let statusMessage;
 
-    // Generate formatted timestamp
+    // Generate timestamp
     const currentTime = new Date();
     const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
       String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
@@ -60,24 +63,23 @@ export async function moveJobToInProgress(jobId) {
       return j;
     });
 
-    // PUT the updated jobs array back to jsonbin
+    // Write the updated jobs array back to jsonbin
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ record: updatedJobs })
+      body: JSON.stringify({ record: { jobs: updatedJobs } })
     });
     if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(statusMessage);
-    // Update the global jobs list and re-populate both admin and contractor views
-    G.jobs = updatedJobs;
-    populateAdminJobs();
-    populateContractorJobs(job.contractor);
+    // Optionally reload the jobs from jsonbin
+    // await loadData();
   } catch (error) {
     console.error("Error updating job status:", error);
     alert("Failed to update job status.");
   }
 }
+
 
 /**
  * Show extended job update form (with signature, machine selection, etc.).
