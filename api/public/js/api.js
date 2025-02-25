@@ -41,7 +41,7 @@ export async function loadData() {
  * Note: jsonbin does not support PATCH natively. You need to fetch the data,
  * update the desired job, and then PUT the whole record back to jsonbin.
  */
-/**
+**
  * Update a job's status.
  */
 export async function updateJobStatus(jobId, newStatus) {
@@ -52,7 +52,7 @@ export async function updateJobStatus(jobId, newStatus) {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const jobsData = fetchedData.record.jobs; // Get the array of jobs
+    const jobsData = fetchedData.jobs; // Get the array directly
 
     // Update the job status locally
     const updatedJobs = jobsData.map(job => {
@@ -63,11 +63,11 @@ export async function updateJobStatus(jobId, newStatus) {
     });
 
     // PUT the updated jobs array back to JSONbin,
-    // preserving the structure: { record: { jobs: [...] } }
+    // preserving the structure: { jobs: [...] }
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ record: { jobs: updatedJobs } })
+      body: JSON.stringify({ jobs: updatedJobs })
     });
     if (!putResponse.ok) throw new Error("Failed to update job status.");
 
@@ -90,7 +90,7 @@ export async function checkForJobUpdates() {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const latestJobs = fetchedData.record.jobs; // Extract the jobs array
+    const latestJobs = fetchedData.jobs; // Extract the jobs array
 
     // Compare with current global G.jobs (ensure G.jobs is defined elsewhere)
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
@@ -113,7 +113,7 @@ export async function refreshContractorView() {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await jobsResponse.json();
-    G.jobs = fetchedData.record.jobs; // Extract the jobs array
+    G.jobs = fetchedData.jobs; // Extract the jobs array
 
     // Find the contractor username (if needed)
     const contractor = G.users.find(u => u.role === "contractor")?.username;
@@ -139,7 +139,7 @@ export async function deleteJob(jobId) {
         headers: { 'Content-Type': 'application/json' }
       });
       const fetchedData = await response.json();
-      const jobsData = fetchedData.record.jobs;
+      const jobsData = fetchedData.jobs;
 
       // Remove the job with the given id
       const updatedJobs = jobsData.filter(job => job.id !== jobId);
@@ -148,7 +148,7 @@ export async function deleteJob(jobId) {
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ record: { jobs: updatedJobs } })
+        body: JSON.stringify({ jobs: updatedJobs })
       });
       if (!putResponse.ok) throw new Error("Failed to delete job.");
 
