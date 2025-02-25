@@ -352,29 +352,29 @@ export async function showUpdateJobForm(jobId) {
     };
 
     try {
-      // Fetch current jobs from jsonbin
+      // Fetch current jobs from JSONbin
       const jobsResponse = await fetch(JOBS_BIN_URL, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
       const jobsData = (await jobsResponse.json()).record;
-
-      // Update the specific job with the new data
+    
+      // Update the specific job with the new data (using job.id and updatedJobData)
       const updatedJobs = jobsData.map(j => {
         if (j.id.toString() === job.id.toString()) {
           return { ...j, ...updatedJobData };
         }
         return j;
       });
-
-      // PUT the updated jobs array back to jsonbin
+    
+      // PUT the updated jobs array back to JSONbin
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ record: updatedJobs })
       });
       if (!putResponse.ok) throw new Error("Failed to update job.");
-
+    
       alert("Job updated successfully and submitted for admin approval.");
       updateFormContainer.remove();
       modalOverlay.remove();
