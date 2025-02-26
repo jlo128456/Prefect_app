@@ -2,9 +2,9 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 
-// Replace these with your actual jsonbin IDs.
 const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
 const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00f1acd3cb34a8ed73fa';
+const MASTER_KEY = '$2a$10$y0KP8R8bOJfHiuMOUousK.0M5pWd19wjCdLU74qjeOGpeIOwZ3oOS';
 
 /**
  * Move job from Pending -> In Progress -> Completed - Pending Approval
@@ -14,7 +14,10 @@ export async function moveJobToInProgress(jobId) {
     // Fetch the entire jobs array from jsonbin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     // Extract the jobs array from the record object
     const jobsData = (await jobsResponse.json()).record.jobs;
@@ -66,7 +69,10 @@ export async function moveJobToInProgress(jobId) {
     // Write the updated jobs array back to jsonbin
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-Master-Key": MASTER_KEY
+      },
       body: JSON.stringify({ record: { jobs: updatedJobs } })
     });
     if (!putResponse.ok) throw new Error("Failed to update job status.");
@@ -80,7 +86,6 @@ export async function moveJobToInProgress(jobId) {
   }
 }
 
-0
 /**
  * Show extended job update form (with signature, machine selection, etc.).
  */
@@ -97,7 +102,10 @@ export async function showUpdateJobForm(jobId) {
   try {
     const machinesResponse = await fetch(MACHINES_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     availableMachines = (await machinesResponse.json()).record;
   } catch (error) {
@@ -309,7 +317,7 @@ export async function showUpdateJobForm(jobId) {
     }
   });
 
-  // Handle form submission: update the job and write back the updated jobs array to jsonbin
+  // Handle form submission: update the job and write back the updated jobs array to JSONbin
   document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     let newStatus = document.getElementById("jobStatus").value;
@@ -355,10 +363,13 @@ export async function showUpdateJobForm(jobId) {
       // Fetch current jobs from JSONbin
       const jobsResponse = await fetch(JOBS_BIN_URL, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY
+        }
       });
-      // Since the JSON structure is { "jobs": [...] }
-      const jobsData = (await jobsResponse.json()).jobs;
+      // Since the JSON structure is { record: { jobs: [...] } }
+      const jobsData = (await jobsResponse.json()).record.jobs;
     
       // Update the specific job with the new data (using job.id and updatedJobData)
       const updatedJobs = jobsData.map(j => {
@@ -369,11 +380,14 @@ export async function showUpdateJobForm(jobId) {
       });
     
       // PUT the updated jobs array back to JSONbin
-      // Note: The data structure must match the JSONbin structure, i.e., { "jobs": [...] }
+      // Note: The data structure must match the JSONbin structure, i.e., { record: { jobs: [...] } }
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobs: updatedJobs })
+        headers: { 
+          "Content-Type": "application/json",
+          'X-Master-Key': MASTER_KEY
+        },
+        body: JSON.stringify({ record: { jobs: updatedJobs } })
       });
       if (!putResponse.ok) throw new Error("Failed to update job.");
     
