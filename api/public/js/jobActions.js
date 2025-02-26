@@ -11,7 +11,7 @@ const MASTER_KEY = '$2a$10$y0KP8R8bOJfHiuMOUousK.0M5pWd19wjCdLU74qjeOGpeIOwZ3oOS
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    // Fetch the entire jobs array from jsonbin
+    // Fetch the entire jobs array from JSONbin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
       headers: { 
@@ -27,11 +27,7 @@ export async function moveJobToInProgress(jobId) {
       return;
     }
 
-    let updatedStatus;
-    let contractorStatus;
-    let statusMessage;
-
-    // Generate timestamp
+    // Generate timestamp in DD/MM/YYYY HH:MM:SS format
     const currentTime = new Date();
     const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
       String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
@@ -39,6 +35,7 @@ export async function moveJobToInProgress(jobId) {
       String(currentTime.getMinutes()).padStart(2, "0")}:${
       String(currentTime.getSeconds()).padStart(2, "0")}`;
 
+    let updatedStatus, contractorStatus, statusMessage;
     if (job.status === "Pending") {
       updatedStatus = "In Progress";
       contractorStatus = "In Progress";
@@ -52,7 +49,7 @@ export async function moveJobToInProgress(jobId) {
       return;
     }
 
-    // Update the specific job in the jobs array
+    // Update the specific job in the jobs array: update status and log the timestamp in onsiteTime
     const updatedJobs = jobsData.map(j => {
       if (j.id.toString() === jobId.toString()) {
         return {
@@ -60,13 +57,13 @@ export async function moveJobToInProgress(jobId) {
           status: updatedStatus,
           contractorStatus: contractorStatus,
           statusTimestamp: formattedTime,
-          onsiteTime: j.onsiteTime === "N/A" ? formattedTime : j.onsiteTime
+          onsiteTime: (!j.onsiteTime || j.onsiteTime === "N/A") ? formattedTime : j.onsiteTime
         };
       }
       return j;
     });
 
-    // Write the updated jobs array back to jsonbin
+    // Write the updated jobs array back to JSONbin
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
       headers: { 
@@ -78,8 +75,10 @@ export async function moveJobToInProgress(jobId) {
     if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(statusMessage);
-    // Optionally reload the jobs from jsonbin
-    // await loadData();
+    // Reload global data and refresh both views
+    await loadData();
+    populateAdminJobs(G.jobs);
+    populateContractorJobs(G.jobs);
   } catch (error) {
     console.error("Error updating job status:", error);
     alert("Failed to update job status.");
