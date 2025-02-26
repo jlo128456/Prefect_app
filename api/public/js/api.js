@@ -1,9 +1,8 @@
-// api.js
-import { G } from './globals.js';
-
 // Replace these with your actual jsonbin IDs.
 const USERS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00c2ad19ca34f80efa55';
 const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
+// Your master key (ideally, do not hardcode this in production)
+const MASTER_KEY = '$2a$10$y0KP8R8bOJfHiuMOUousK.0M5pWd19wjCdLU74qjeOGpeIOwZ3oOS';
 
 /**
  * Load JSON data (users, jobs) from jsonbin and store in globals.
@@ -13,7 +12,10 @@ export async function loadData() {
     // Fetch from the Jobs bin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     // Since the JSON is { record: { jobs: [...] } }
     const jobsData = await jobsResponse.json();
@@ -21,10 +23,13 @@ export async function loadData() {
 
     console.log("Jobs loaded:", G.jobs);
 
-    // If your users bin also has record.users, do the same pattern there
+    // Fetch from the Users bin
     const usersResponse = await fetch(USERS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     const usersData = await usersResponse.json();
     G.users = usersData.record.users; // if it's also { record: { users: [...] } }
@@ -36,12 +41,6 @@ export async function loadData() {
 }
 
 /**
- * Update job status (e.g. Approve, Reject) by PATCHing to jsonbin.
- *
- * Note: jsonbin does not support PATCH natively. You need to fetch the data,
- * update the desired job, and then PUT the whole record back to jsonbin.
- */
-/**
  * Update a job's status.
  */
 export async function updateJobStatus(jobId, newStatus) {
@@ -49,7 +48,10 @@ export async function updateJobStatus(jobId, newStatus) {
     // Fetch the current jobs data and extract the jobs array
     const response = await fetch(JOBS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     const fetchedData = await response.json();
     const jobsData = fetchedData.record.jobs; // note .record.jobs
@@ -66,7 +68,10 @@ export async function updateJobStatus(jobId, newStatus) {
     // preserving the structure: { record: { jobs: [...] } }
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        'X-Master-Key': MASTER_KEY
+      },
       body: JSON.stringify({
         record: {
           jobs: updatedJobs
@@ -91,7 +96,10 @@ export async function checkForJobUpdates() {
   try {
     const response = await fetch(JOBS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     const fetchedData = await response.json();
     const latestJobs = fetchedData.record.jobs; // note .record.jobs
@@ -114,7 +122,10 @@ export async function refreshContractorView() {
   try {
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      }
     });
     const fetchedData = await jobsResponse.json();
     G.jobs = fetchedData.record.jobs; // note .record.jobs
@@ -126,7 +137,6 @@ export async function refreshContractorView() {
     console.error("Error refreshing contractor view:", error);
   }
 }
-
 
 /**
  * Delete a job (Admin function).
@@ -140,7 +150,10 @@ export async function deleteJob(jobId) {
       // Fetch current jobs and extract the jobs array
       const response = await fetch(JOBS_BIN_URL, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY
+        }
       });
       const fetchedData = await response.json();
       const jobsData = fetchedData.record.jobs; // note .record.jobs
@@ -151,7 +164,10 @@ export async function deleteJob(jobId) {
       // Write the updated data back to JSONbin (preserving structure)
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'X-Master-Key': MASTER_KEY
+        },
         body: JSON.stringify({
           record: {
             jobs: updatedJobs
