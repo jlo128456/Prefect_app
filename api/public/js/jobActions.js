@@ -1,6 +1,7 @@
 // jobActions.js
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
+import { loadData } from './api.js';
 
 const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
 const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00f1acd3cb34a8ed73fa';
