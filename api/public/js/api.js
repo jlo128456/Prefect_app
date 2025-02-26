@@ -10,26 +10,26 @@ const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
  */
 export async function loadData() {
   try {
-    // Fetch from the Users bin
-    const usersResponse = await fetch(USERS_BIN_URL, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const usersData = await usersResponse.json(); // { record: { users: [ ... ] } }
-
     // Fetch from the Jobs bin
     const jobsResponse = await fetch(JOBS_BIN_URL, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
-    const jobsData = await jobsResponse.json(); // { record: { jobs: [ ... ] } }
+    // Since the JSON is { record: { jobs: [...] } }
+    const jobsData = await jobsResponse.json();
+    G.jobs = jobsData.record.jobs; // <-- note the .record.jobs
 
-    // Assign the arrays to your global variables
-    G.users = usersData.record.users; // Make sure "users" matches your bin's structure
-    G.jobs = jobsData.record.jobs;    // "jobs" should be an array
+    console.log("Jobs loaded:", G.jobs);
+
+    // If your users bin also has record.users, do the same pattern there
+    const usersResponse = await fetch(USERS_BIN_URL, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const usersData = await usersResponse.json();
+    G.users = usersData.record.users; // if it's also { record: { users: [...] } }
 
     console.log("Users loaded:", G.users);
-    console.log("Jobs loaded:", G.jobs);
   } catch (error) {
     console.error("Error loading JSON:", error);
   }
@@ -52,7 +52,7 @@ export async function updateJobStatus(jobId, newStatus) {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const jobsData = fetchedData.jobs; // Get the array directly
+    const jobsData = fetchedData.record.jobs; // note .record.jobs
 
     // Update the job status locally
     const updatedJobs = jobsData.map(job => {
@@ -63,16 +63,20 @@ export async function updateJobStatus(jobId, newStatus) {
     });
 
     // PUT the updated jobs array back to JSONbin,
-    // preserving the structure: { jobs: [...] }
+    // preserving the structure: { record: { jobs: [...] } }
     const putResponse = await fetch(JOBS_BIN_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobs: updatedJobs })
+      body: JSON.stringify({
+        record: {
+          jobs: updatedJobs
+        }
+      })
     });
     if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     alert(`Job status updated to '${newStatus}'.`);
-    // Optionally reload jobs from JSONbin (for example, call a loadData function)
+    // Optionally reload jobs from JSONbin (for example, call loadData())
     await loadData();
   } catch (error) {
     console.error("Error updating job status:", error);
@@ -90,9 +94,9 @@ export async function checkForJobUpdates() {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await response.json();
-    const latestJobs = fetchedData.jobs; // Extract the jobs array
+    const latestJobs = fetchedData.record.jobs; // note .record.jobs
 
-    // Compare with current global G.jobs (ensure G.jobs is defined elsewhere)
+    // Compare with current global G.jobs
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
       console.log("Job list updated. Refreshing admin dashboard...");
       G.jobs = latestJobs;
@@ -113,16 +117,16 @@ export async function refreshContractorView() {
       headers: { 'Content-Type': 'application/json' }
     });
     const fetchedData = await jobsResponse.json();
-    G.jobs = fetchedData.jobs; // Extract the jobs array
+    G.jobs = fetchedData.record.jobs; // note .record.jobs
 
-    // Find the contractor username (if needed)
+    // If you have a global G.users array for contractors:
     const contractor = G.users.find(u => u.role === "contractor")?.username;
-    // Re-populate contractor jobs if desired
     console.log("Contractor view refreshed with updated job data.");
   } catch (error) {
     console.error("Error refreshing contractor view:", error);
   }
 }
+
 
 /**
  * Delete a job (Admin function).
@@ -139,7 +143,7 @@ export async function deleteJob(jobId) {
         headers: { 'Content-Type': 'application/json' }
       });
       const fetchedData = await response.json();
-      const jobsData = fetchedData.jobs;
+      const jobsData = fetchedData.record.jobs; // note .record.jobs
 
       // Remove the job with the given id
       const updatedJobs = jobsData.filter(job => job.id !== jobId);
@@ -148,15 +152,20 @@ export async function deleteJob(jobId) {
       const putResponse = await fetch(JOBS_BIN_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobs: updatedJobs })
+        body: JSON.stringify({
+          record: {
+            jobs: updatedJobs
+          }
+        })
       });
       if (!putResponse.ok) throw new Error("Failed to delete job.");
 
       alert("Job deleted successfully.");
-      // Optionally, refresh the dashboard or call loadData again
+      // Optionally, refresh or call loadData() again
     } catch (error) {
       console.error("Error deleting job:", error);
       alert("Failed to delete the job.");
     }
   }
 }
+
