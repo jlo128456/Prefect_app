@@ -116,6 +116,7 @@ export function populateContractorJobs(contractor) {
       <td>${job.workOrder}</td>
       <td>${job.customerName}</td>
       <td>${job.requiredDate}</td> <!-- New column for required date -->
+      <td>${job.onsiteTime ? job.onsiteTime : "Not Logged"}</td>
       <td class="status-cell">${displayStatus}</td>
       <td>
         ${
