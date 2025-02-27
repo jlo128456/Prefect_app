@@ -2,33 +2,33 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 import { loadData } from './api.js';
+import mysql from 'mysql2/promise';
 
-const JOBS_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb011be41b4d34e4993fc2';
-const MACHINES_BIN_URL = 'https://api.jsonbin.io/v3/b/67bb00f1acd3cb34a8ed73fa';
-const MASTER_KEY = '$2a$10$y0KP8R8bOJfHiuMOUousK.0M5pWd19wjCdLU74qjeOGpeIOwZ3oOS';
+// Create a MySQL connection pool using Aiven credentials from environment variables.
+const pool = mysql.createPool({
+  host: process.env.AIVEN_MYSQL_HOST,         // e.g. prefect-app-prefect-app.c.aivencloud.com
+  user: process.env.AIVEN_MYSQL_USER,          // e.g. avnadmin
+  password: process.env.AIVEN_MYSQL_PASSWORD,  // your password
+  database: process.env.AIVEN_MYSQL_DATABASE,  // e.g. PrefectAppDB
+  port: process.env.AIVEN_MYSQL_PORT || 3306,   // e.g. 13590
+  ssl: { rejectUnauthorized: false },
+});
 
 /**
- * Move job from Pending -> In Progress -> Completed - Pending Approval
+ * Move job from Pending -> In Progress -> Completed - Pending Approval.
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    // Fetch the entire jobs array from JSONbin
-    const jobsResponse = await fetch(JOBS_BIN_URL, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Master-Key': MASTER_KEY
-      }
-    });
-    // Extract the jobs array from the record object
-    const jobsData = (await jobsResponse.json()).record.jobs;
-    const job = jobsData.find(j => j.id.toString() === jobId.toString());
-    if (!job) {
-      alert("Job not found.");
+    // Fetch the job record from MySQL
+    const [jobs] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+    if (jobs.length === 0) {
+      // You can adjust error handling as needed
+      console.error("Job not found.");
       return;
     }
+    const job = jobs[0];
 
-    // Generate timestamp in DD/MM/YYYY HH:MM:SS format
+    // Generate timestamp in DD/MM/YYYY HH:MM:SS format.
     const currentTime = new Date();
     const formattedTime = `${String(currentTime.getDate()).padStart(2, "0")}/${
       String(currentTime.getMonth() + 1).padStart(2, "0")}/${currentTime.getFullYear()} ${
@@ -46,365 +46,332 @@ export async function moveJobToInProgress(jobId) {
       contractorStatus = "Completed";
       statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
     } else {
-      alert("Invalid action: The job is already completed or approved.");
+      console.error("Invalid action: The job is already completed or approved.");
       return;
     }
 
-    // Update the specific job in the jobs array: update status and log the timestamp in onsiteTime
-    const updatedJobs = jobsData.map(j => {
-      if (j.id.toString() === jobId.toString()) {
-        return {
-          ...j,
-          status: updatedStatus,
-          contractorStatus: contractorStatus,
-          statusTimestamp: formattedTime,
-          onsiteTime: (!j.onsiteTime || j.onsiteTime === "N/A") ? formattedTime : j.onsiteTime
-        };
-      }
-      return j;
-    });
+    // Determine onsiteTime value (if not set, assign the formatted time)
+    const onsiteTime = (!job.onsiteTime || job.onsiteTime === "N/A") ? formattedTime : job.onsiteTime;
 
-    // Write the updated jobs array back to JSONbin
-    const putResponse = await fetch(JOBS_BIN_URL, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "X-Master-Key": MASTER_KEY
-      },
-      body: JSON.stringify({ record: { jobs: updatedJobs } })
-    });
-    if (!putResponse.ok) throw new Error("Failed to update job status.");
+    // Update the job record in the database.
+    const [result] = await pool.query(
+      `UPDATE jobs 
+       SET status = ?, contractorStatus = ?, statusTimestamp = ?, onsiteTime = ?
+       WHERE id = ?`,
+      [updatedStatus, contractorStatus, formattedTime, onsiteTime, jobId]
+    );
+    if (result.affectedRows === 0) throw new Error("Failed to update job status.");
 
-    alert(statusMessage);
-    // Reload global data and refresh both views
+    console.log(statusMessage);
+    // Reload global data and refresh both views.
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.jobs);
   } catch (error) {
     console.error("Error updating job status:", error);
-    alert("Failed to update job status.");
   }
 }
 
 /**
  * Show extended job update form (with signature, machine selection, etc.).
+ * This function fetches data directly from MySQL and then renders an HTML form.
  */
 export async function showUpdateJobForm(jobId) {
-  // Find job in global jobs array (assumes jobs have been loaded already)
-  const job = G.jobs.find(j => j.id.toString() === jobId.toString());
-  if (!job) {
-    alert("Job not found!");
-    return;
-  }
-
-  // Fetch available machines from jsonbin
-  let availableMachines = [];
   try {
-    const machinesResponse = await fetch(MACHINES_BIN_URL, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Master-Key': MASTER_KEY
+    // Fetch the job record from MySQL.
+    const [jobRows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+    if (jobRows.length === 0) {
+      console.error("Job not found!");
+      return;
+    }
+    const job = jobRows[0];
+
+    // Fetch available machines from the MySQL database.
+    const [machinesRows] = await pool.query('SELECT * FROM machines');
+    const availableMachines = machinesRows;
+
+    // Remove any existing form or overlay.
+    const existingForm = document.getElementById("updateJobContainer");
+    const existingOverlay = document.getElementById("modalOverlay");
+    if (existingForm) existingForm.remove();
+    if (existingOverlay) existingOverlay.remove();
+
+    // Hide main views.
+    G.adminView.style.display = "none";
+    G.contractorView.style.display = "none";
+
+    // Create overlay.
+    const modalOverlay = document.createElement("div");
+    modalOverlay.id = "modalOverlay";
+    Object.assign(modalOverlay.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      background: "rgba(0, 0, 0, 0.5)",
+      zIndex: "999",
+    });
+    document.body.appendChild(modalOverlay);
+
+    // For contractors, hide the status dropdown (always "Completed").
+    const statusField = G.currentUserRole === "contractor"
+      ? `<input type="hidden" id="jobStatus" value="Completed">`
+      : `
+        <select id="jobStatus" required>
+          <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
+          <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
+          <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
+        </select>
+      `;
+
+    // Build the update form HTML.
+    const formHTML = `
+      <div id="updateJobContainer">
+        <h3>Update Work Order: ${job.workOrder}</h3>
+        <form id="updateJobForm">
+          <div>
+            <label>Customer Name</label>
+            <input type="text" id="customerName" value="${job.customerName}" required>
+          </div>
+          <div>
+            <label>Contact Name</label>
+            <input type="text" id="contactName" value="${job.contactName || ""}" required>
+          </div>
+          <div>
+            <label>Travel Time (hours)</label>
+            <input type="number" id="travelTime" min="0" step="0.5" value="${job.travelTime || 0}" required>
+          </div>
+          <div>
+            <label>Labour Time (hours)</label>
+            <input type="number" id="labourTime" min="0" step="0.5" value="${job.labourTime || 0}" required>
+          </div>
+          <div>
+            <label>Work Performed</label>
+            <select id="workPerformedDropdown">
+              <option value="">Select Common Work Performed</option>
+              <option value="Routine Maintenance">Routine Maintenance</option>
+              <option value="Software Update">Software Updated</option>
+              <option value="Parts Replacement">Parts Replacement</option>
+              <option value="Hardware Repair">Hardware Repair</option>
+              <option value="System Calibration">Sensors Calibration</option>
+            </select>
+            <textarea id="workPerformed" rows="3" required>${job.workPerformed || ""}</textarea>
+          </div>
+          <div>
+            <label>Select Machines</label>
+            <select id="machineSelect">
+              <option value="">Select Machine</option>
+              ${availableMachines.map(machine => `<option value="${machine.machineId}">${machine.machineType} - ${machine.model}</option>`).join("")}
+            </select>
+            <button type="button" id="addMachine">Add Machine</button>
+          </div>
+          <div id="machineList">
+            ${
+              Array.isArray(job.machines)
+                ? job.machines.map(machineId => {
+                    const machine = availableMachines.find(m => m.machineId === machineId);
+                    if (!machine) return "";
+                    return `
+                      <div class="machine-entry" data-id="${machine.machineId}">
+                        <strong>${machine.machineType} - ${machine.model}</strong>
+                        <label>Notes:</label>
+                        <textarea class="machine-notes">${machine.notes || ""}</textarea>
+                        <label>Parts Used:</label>
+                        <input type="text" class="machine-parts" value="${machine.partsUsed || ""}">
+                        <button type="button" class="remove-machine">Remove</button>
+                      </div>
+                    `;
+                  }).join("")
+                : ""
+            }
+          </div>
+          <div>
+            <label>Job Status</label>
+            ${statusField}
+          </div>
+          <div>
+            <label>Completion Date</label>
+            <input type="date" id="completionDate" value="${job.completionDate || ""}" required>
+          </div>
+          <div>
+            <label>Checklist</label>
+            <div>
+              <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? "checked" : ""}> No Missing Screws
+              <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? "checked" : ""}> Software Updated
+              <input type="checkbox" id="checkTested" ${job.checklist?.tested ? "checked" : ""}> Tested
+              <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? "checked" : ""}> Approved by Management
+            </div>
+          </div>
+          <div>
+            <label>Signature</label>
+            <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
+            <button type="button" id="clearSignature">Clear Signature</button>
+          </div>
+          <button type="submit">Save</button>
+        </form>
+        <button type="button" id="backToDashboard">Back to Dashboard</button>
+      </div>
+    `;
+
+    // Insert the update form into the DOM.
+    const updateFormContainer = document.createElement("div");
+    updateFormContainer.innerHTML = formHTML;
+    document.body.appendChild(updateFormContainer);
+
+    // --- Signature Pad Setup ---
+    const signatureCanvas = document.getElementById("signatureCanvas");
+    const ctx = signatureCanvas.getContext("2d");
+    let isDrawing = false;
+
+    // Load existing signature if available.
+    if (job.signature) {
+      const img = new Image();
+      img.src = job.signature;
+      img.onload = () => ctx.drawImage(img, 0, 0);
+    }
+
+    signatureCanvas.addEventListener("mousedown", (e) => {
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+    signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
+    signatureCanvas.addEventListener("mousemove", (e) => {
+      if (!isDrawing) return;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    });
+    document.getElementById("clearSignature").addEventListener("click", () => {
+      ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    });
+
+    // Work Performed dropdown logic.
+    document.getElementById("workPerformedDropdown").addEventListener("change", function() {
+      const selectedPhrase = this.value;
+      const textarea = document.getElementById("workPerformed");
+      if (selectedPhrase) {
+        textarea.value += selectedPhrase + "\n";
       }
     });
-    availableMachines = (await machinesResponse.json()).record;
-  } catch (error) {
-    console.error("Error fetching machines:", error);
-  }
 
-  // Remove any existing form or overlay
-  const existingForm = document.getElementById("updateJobContainer");
-  const existingOverlay = document.getElementById("modalOverlay");
-  if (existingForm) existingForm.remove();
-  if (existingOverlay) existingOverlay.remove();
+    // Add Machine functionality.
+    document.getElementById("addMachine").addEventListener("click", () => {
+      const machineSelect = document.getElementById("machineSelect");
+      const selectedMachineId = machineSelect.value;
+      const selectedMachineName = machineSelect.options[machineSelect.selectedIndex].text;
+      if (!selectedMachineId) {
+        alert("Please select a machine!");
+        return;
+      }
+      const machineList = document.getElementById("machineList");
+      if (document.querySelector(`[data-id="${selectedMachineId}"]`)) {
+        alert("Machine already added!");
+        return;
+      }
+      const machineEntry = document.createElement("div");
+      machineEntry.classList.add("machine-entry");
+      machineEntry.setAttribute("data-id", selectedMachineId);
+      machineEntry.innerHTML = `
+        <strong>${selectedMachineName}</strong>
+        <label>Notes:</label>
+        <textarea class="machine-notes"></textarea>
+        <label>Parts Used:</label>
+        <input type="text" class="machine-parts">
+        <button type="button" class="remove-machine">Remove</button>
+      `;
+      machineList.appendChild(machineEntry);
+    });
 
-  // Hide main views
-  G.adminView.style.display = "none";
-  G.contractorView.style.display = "none";
+    // Remove Machine functionality.
+    document.getElementById("machineList").addEventListener("click", (event) => {
+      if (event.target.classList.contains("remove-machine")) {
+        event.target.parentElement.remove();
+      }
+    });
 
-  // Create overlay
-  const modalOverlay = document.createElement("div");
-  modalOverlay.id = "modalOverlay";
-  Object.assign(modalOverlay.style, {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    background: "rgba(0, 0, 0, 0.5)",
-    zIndex: "999",
-  });
-  document.body.appendChild(modalOverlay);
-
-  // For contractors, hide the status dropdown (always "Completed")
-  const statusField = G.currentUserRole === "contractor"
-    ? `<input type="hidden" id="jobStatus" value="Completed">`
-    : `
-      <select id="jobStatus" required>
-        <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
-        <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
-        <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
-      </select>
-    `;
-
-  // Build the update form HTML
-  const formHTML = `
-    <div id="updateJobContainer">
-      <h3>Update Work Order: ${job.workOrder}</h3>
-      <form id="updateJobForm">
-        <div>
-          <label>Customer Name</label>
-          <input type="text" id="customerName" value="${job.customerName}" required>
-        </div>
-        <div>
-          <label>Contact Name</label>
-          <input type="text" id="contactName" value="${job.contactName || ""}" required>
-        </div>
-        <div>
-          <label>Travel Time (hours)</label>
-          <input type="number" id="travelTime" min="0" step="0.5" value="${job.travelTime || 0}" required>
-        </div>
-        <div>
-          <label>Labour Time (hours)</label>
-          <input type="number" id="labourTime" min="0" step="0.5" value="${job.labourTime || 0}" required>
-        </div>
-        <div>
-          <label>Work Performed</label>
-          <select id="workPerformedDropdown">
-            <option value="">Select Common Work Performed</option>
-            <option value="Routine Maintenance">Routine Maintenance</option>
-            <option value="Software Update">Software Updated</option>
-            <option value="Parts Replacement">Parts Replacement</option>
-            <option value="Hardware Repair">Hardware Repair</option>
-            <option value="System Calibration">Sensors Calibration</option>
-          </select>
-          <textarea id="workPerformed" rows="3" required>${job.workPerformed || ""}</textarea>
-        </div>
-        <div>
-          <label>Select Machines</label>
-          <select id="machineSelect">
-            <option value="">Select Machine</option>
-            ${availableMachines.map(machine => `<option value="${machine.machineId}">${machine.machineType} - ${machine.model}</option>`).join("")}
-          </select>
-          <button type="button" id="addMachine">Add Machine</button>
-        </div>
-        <div id="machineList">
-          ${
-            Array.isArray(job.machines)
-              ? job.machines.map(machineId => {
-                  const machine = availableMachines.find(m => m.machineId === machineId);
-                  if (!machine) return "";
-                  return `
-                    <div class="machine-entry" data-id="${machine.machineId}">
-                      <strong>${machine.machineType} - ${machine.model}</strong>
-                      <label>Notes:</label>
-                      <textarea class="machine-notes">${machine.notes || ""}</textarea>
-                      <label>Parts Used:</label>
-                      <input type="text" class="machine-parts" value="${machine.partsUsed || ""}">
-                      <button type="button" class="remove-machine">Remove</button>
-                    </div>
-                  `;
-                }).join("")
-              : ""
-          }
-        </div>
-        <div>
-          <label>Job Status</label>
-          ${statusField}
-        </div>
-        <div>
-          <label>Completion Date</label>
-          <input type="date" id="completionDate" value="${job.completionDate || ""}" required>
-        </div>
-        <div>
-          <label>Checklist</label>
-          <div>
-            <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? "checked" : ""}> No Missing Screws
-            <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? "checked" : ""}> Software Updated
-            <input type="checkbox" id="checkTested" ${job.checklist?.tested ? "checked" : ""}> Tested
-            <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? "checked" : ""}> Approved by Management
-          </div>
-        </div>
-        <div>
-          <label>Signature</label>
-          <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
-          <button type="button" id="clearSignature">Clear Signature</button>
-        </div>
-        <button type="submit">Save</button>
-      </form>
-      <button type="button" id="backToDashboard">Back to Dashboard</button>
-    </div>
-  `;
-
-  // Insert form into the DOM
-  const updateFormContainer = document.createElement("div");
-  updateFormContainer.innerHTML = formHTML;
-  document.body.appendChild(updateFormContainer);
-
-  // --- Signature Pad Setup ---
-  const signatureCanvas = document.getElementById("signatureCanvas");
-  const ctx = signatureCanvas.getContext("2d");
-  let isDrawing = false;
-
-  // Load existing signature if available
-  if (job.signature) {
-    const img = new Image();
-    img.src = job.signature;
-    img.onload = () => ctx.drawImage(img, 0, 0);
-  }
-
-  signatureCanvas.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-  });
-  signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
-  signatureCanvas.addEventListener("mousemove", (e) => {
-    if (!isDrawing) return;
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "black";
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-  });
-
-  document.getElementById("clearSignature").addEventListener("click", () => {
-    ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-  });
-
-  // Work Performed dropdown logic
-  document.getElementById("workPerformedDropdown").addEventListener("change", function() {
-    const selectedPhrase = this.value;
-    const textarea = document.getElementById("workPerformed");
-    if (selectedPhrase) {
-      textarea.value += selectedPhrase + "\n";
-    }
-  });
-
-  // Add Machine functionality
-  document.getElementById("addMachine").addEventListener("click", () => {
-    const machineSelect = document.getElementById("machineSelect");
-    const selectedMachineId = machineSelect.value;
-    const selectedMachineName = machineSelect.options[machineSelect.selectedIndex].text;
-
-    if (!selectedMachineId) {
-      alert("Please select a machine!");
-      return;
-    }
-    const machineList = document.getElementById("machineList");
-    if (document.querySelector(`[data-id="${selectedMachineId}"]`)) {
-      alert("Machine already added!");
-      return;
-    }
-    const machineEntry = document.createElement("div");
-    machineEntry.classList.add("machine-entry");
-    machineEntry.setAttribute("data-id", selectedMachineId);
-    machineEntry.innerHTML = `
-      <strong>${selectedMachineName}</strong>
-      <label>Notes:</label>
-      <textarea class="machine-notes"></textarea>
-      <label>Parts Used:</label>
-      <input type="text" class="machine-parts">
-      <button type="button" class="remove-machine">Remove</button>
-    `;
-    machineList.appendChild(machineEntry);
-  });
-
-  // Remove Machine functionality
-  document.getElementById("machineList").addEventListener("click", (event) => {
-    if (event.target.classList.contains("remove-machine")) {
-      event.target.parentElement.remove();
-    }
-  });
-
-  // Handle form submission: update the job and write back the updated jobs array to JSONbin
-  document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    let newStatus = document.getElementById("jobStatus").value;
-    let newContractorStatus = newStatus;
-
-    // For contractors, if finishing the job, adjust statuses
-    if (G.currentUserRole === "contractor" && newStatus === "Completed") {
-      newStatus = "Completed - Pending Approval";
-      newContractorStatus = "Completed";
-    }
-
-    // Gather selected machines
-    const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
-      id: machine.getAttribute("data-id"),
-      name: machine.querySelector("strong").innerText,
-      notes: machine.querySelector(".machine-notes").value,
-      partsUsed: machine.querySelector(".machine-parts").value,
-    }));
-
-    // Convert the signature to base64
-    const signatureData = signatureCanvas.toDataURL("image/png");
-
-    const updatedJobData = {
-      customerName: document.getElementById("customerName").value.trim(),
-      contactName: document.getElementById("contactName").value.trim(),
-      workPerformed: document.getElementById("workPerformed").value.trim(),
-      travelTime: document.getElementById("travelTime").value,
-      labourTime: document.getElementById("labourTime").value,
-      status: newStatus,
-      contractorStatus: newContractorStatus,
-      completionDate: document.getElementById("completionDate").value,
-      checklist: {
-        noMissingScrews: document.getElementById("checkScrews").checked,
-        softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
-        tested: document.getElementById("checkTested").checked,
-        approvedByManagement: document.getElementById("checkApproved").checked,
-      },
-      signature: signatureData,
-      machines: updatedMachines,
-    };
-
-    try {
-      // Fetch current jobs from JSONbin
-      const jobsResponse = await fetch(JOBS_BIN_URL, {
-        method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Master-Key': MASTER_KEY
-        }
-      });
-      // Since the JSON structure is { record: { jobs: [...] } }
-      const jobsData = (await jobsResponse.json()).record.jobs;
-    
-      // Update the specific job with the new data (using job.id and updatedJobData)
-      const updatedJobs = jobsData.map(j => {
-        if (j.id.toString() === job.id.toString()) {
-          return { ...j, ...updatedJobData };
-        }
-        return j;
-      });
-    
-      // PUT the updated jobs array back to JSONbin
-      // Note: The data structure must match the JSONbin structure, i.e., { record: { jobs: [...] } }
-      const putResponse = await fetch(JOBS_BIN_URL, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          'X-Master-Key': MASTER_KEY
+    // Handle form submission: update the job in MySQL.
+    document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      let newStatus = document.getElementById("jobStatus").value;
+      let newContractorStatus = newStatus;
+      if (G.currentUserRole === "contractor" && newStatus === "Completed") {
+        newStatus = "Completed - Pending Approval";
+        newContractorStatus = "Completed";
+      }
+      const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
+        id: machine.getAttribute("data-id"),
+        name: machine.querySelector("strong").innerText,
+        notes: machine.querySelector(".machine-notes").value,
+        partsUsed: machine.querySelector("input.machine-parts").value,
+      }));
+      const signatureData = signatureCanvas.toDataURL("image/png");
+      const updatedJobData = {
+        customerName: document.getElementById("customerName").value.trim(),
+        contactName: document.getElementById("contactName").value.trim(),
+        workPerformed: document.getElementById("workPerformed").value.trim(),
+        travelTime: document.getElementById("travelTime").value,
+        labourTime: document.getElementById("labourTime").value,
+        status: newStatus,
+        contractorStatus: newContractorStatus,
+        completionDate: document.getElementById("completionDate").value,
+        checklist: {
+          noMissingScrews: document.getElementById("checkScrews").checked,
+          softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
+          tested: document.getElementById("checkTested").checked,
+          approvedByManagement: document.getElementById("checkApproved").checked,
         },
-        body: JSON.stringify({ record: { jobs: updatedJobs } })
-      });
-      if (!putResponse.ok) throw new Error("Failed to update job.");
-    
-      alert("Job updated successfully and submitted for admin approval.");
+        signature: signatureData,
+        machines: updatedMachines,
+      };
+      try {
+        // Merge updated data with the existing job object.
+        const updatedJob = { ...job, ...updatedJobData };
+
+        // Update the job record in the database.
+        const updateQuery = `
+          UPDATE jobs 
+          SET customerName = ?, contactName = ?, workPerformed = ?, travelTime = ?, labourTime = ?,
+              status = ?, contractorStatus = ?, completionDate = ?, checklist = ?, signature = ?, machines = ?
+          WHERE id = ?
+        `;
+        const params = [
+          updatedJob.customerName,
+          updatedJob.contactName,
+          updatedJob.workPerformed,
+          updatedJob.travelTime,
+          updatedJob.labourTime,
+          updatedJob.status,
+          updatedJob.contractorStatus,
+          updatedJob.completionDate,
+          JSON.stringify(updatedJob.checklist),
+          updatedJob.signature,
+          JSON.stringify(updatedJob.machines),
+          job.id,
+        ];
+        const [result] = await pool.query(updateQuery, params);
+        if (result.affectedRows === 0) throw new Error("Failed to update job.");
+        alert("Job updated successfully and submitted for admin approval.");
+        updateFormContainer.remove();
+        modalOverlay.remove();
+        showDashboard(G.currentUserRole);
+      } catch (error) {
+        console.error("Error updating job:", error);
+        alert("Failed to update the job.");
+      }
+    });
+
+    // Back to Dashboard button.
+    document.getElementById("backToDashboard").addEventListener("click", () => {
       updateFormContainer.remove();
       modalOverlay.remove();
       showDashboard(G.currentUserRole);
-    } catch (error) {
-      console.error("Error updating job:", error);
-      alert("Failed to update the job.");
-    }
-  });
-
-  // Back to Dashboard button
-  document.getElementById("backToDashboard").addEventListener("click", () => {
-    updateFormContainer.remove();
-    modalOverlay.remove();
-    showDashboard(G.currentUserRole);
-  });
+    });
+  } catch (error) {
+    console.error("Error showing update form:", error);
+    alert("Failed to load job data.");
+  }
 }
