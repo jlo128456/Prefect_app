@@ -2,10 +2,10 @@
   "name": "prefect_app",
   "version": "1.0.0",
   "description": "",
-  "main": "api/server.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node api/server.js"
+    "start": "node server.js"
   },
   "engines": {
     "node": "18.x"
