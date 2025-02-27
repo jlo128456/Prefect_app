@@ -84,16 +84,21 @@ export async function updateJobStatus(jobId) {
     alert(statusMessage);
     // Reload global data and refresh views.
     await loadData();
-    populateAdminJobs(G.jobs);
-    populateContractorJobs(G.jobs);
-    showDashboard(G.currentUserRole); // Call showDashboard to update the UI
+    // For admins, display all jobs.
+    if (G.currentUserRole === "admin") {
+      populateAdminJobs(G.jobs);
+    } else {
+      populateContractorJobs(G.jobs);
+    }
+    showDashboard(G.currentUserRole);
   } catch (error) {
     console.error("Error updating job status:", error);
   }
 }
 
 /**
- * Periodically check if the job list has changed (Admin view).
+ * Periodically check if the job list has changed.
+ * For admin, refresh with all jobs.
  */
 export async function checkForJobUpdates() {
   try {
@@ -101,12 +106,16 @@ export async function checkForJobUpdates() {
     if (!response.ok) throw new Error("Failed to fetch jobs");
     const latestJobs = await response.json();
 
-    // Compare with current global G.jobs.
-    if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
-      console.log("Job list updated. Refreshing admin dashboard...");
-      G.jobs = latestJobs;
-      // Optionally, trigger re-population of the admin dashboard.
-      showDashboard(G.currentUserRole);
+    // For admin view, ensure all jobs are displayed.
+    if (G.currentUserRole === "admin") {
+      if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
+        console.log("Job list updated. Refreshing admin dashboard...");
+        G.jobs = latestJobs;
+        showDashboard(G.currentUserRole);
+      }
+    } else {
+      // For contractors, filtering is handled in refreshContractorView.
+      console.log("Contractor view update skipped in checkForJobUpdates.");
     }
   } catch (error) {
     console.error("Error checking for job updates:", error);
@@ -120,12 +129,16 @@ export async function refreshContractorView() {
   try {
     const response = await fetch(`${API_BASE_URL}/jobs`);
     if (!response.ok) throw new Error("Failed to fetch jobs");
-    G.jobs = await response.json();
+    const allJobs = await response.json();
 
-    // If you have a global G.users array for contractors:
-    const contractor = G.users.find(u => u.role === "contractor")?.username;
-    console.log("Contractor view refreshed with updated job data.", contractor);
-    showDashboard(G.currentUserRole); // Update dashboard for contractor view
+    // If the current user is a contractor, filter jobs for the assigned contractor.
+    if (G.currentUserRole === "contractor" && G.currentUser) {
+      G.jobs = allJobs.filter(job => job.assignedContractor === G.currentUser);
+    } else {
+      G.jobs = allJobs;
+    }
+    console.log("Contractor view refreshed with job data for", G.currentUser);
+    showDashboard(G.currentUserRole);
   } catch (error) {
     console.error("Error refreshing contractor view:", error);
   }
@@ -142,9 +155,13 @@ export async function deleteJob(jobId) {
       });
       if (!response.ok) throw new Error("Failed to delete job.");
       alert("Job deleted successfully.");
-      // Optionally reload jobs after deletion.
+      // Reload global data and refresh views.
       await loadData();
-      showDashboard(G.currentUserRole); // Update dashboard after deletion
+      // If admin, display all jobs.
+      if (G.currentUserRole === "admin") {
+        populateAdminJobs(G.jobs);
+      }
+      showDashboard(G.currentUserRole);
     } catch (error) {
       console.error("Error deleting job:", error);
       alert("Failed to delete the job.");
