@@ -2,10 +2,13 @@
 import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables from .env
 import express from 'express';
+import cors from 'cors';
 import mysql from 'mysql2/promise';
 
 const app = express();
 const port = process.env.PORT || 3000;
+// Enable CORS for all routes
+app.use(cors());
 
 // Create a MySQL connection pool using Aiven credentials from environment variables
 const pool = mysql.createPool({

@@ -1,31 +1,25 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 import { loadData } from './api.js';
-import mysql from 'mysql2/promise';
 
-// Create a MySQL connection pool using Aiven credentials from environment variables.
-const pool = mysql.createPool({
-  host: process.env.AIVEN_MYSQL_HOST,         // e.g., prefect-app-prefect-app.c.aivencloud.com
-  user: process.env.AIVEN_MYSQL_USER,          // e.g., avnadmin
-  password: process.env.AIVEN_MYSQL_PASSWORD,  // your password
-  database: process.env.AIVEN_MYSQL_DATABASE,  // e.g., PrefectAppDB
-  port: process.env.AIVEN_MYSQL_PORT || 3306,   // e.g., 13590
-  ssl: { rejectUnauthorized: false },
-});
+// Base URL for your backend API on Render
+const API_BASE_URL = 'https://prefect-app.onrender.com';
 
 /**
- * Load data (jobs, users) from MySQL and store in globals.
+ * Load data (jobs, users) from the API and store in globals.
  */
 export async function loadData() {
   try {
-    // Fetch jobs from the MySQL database.
-    const [jobs] = await pool.query('SELECT * FROM jobs');
-    G.jobs = jobs;
+    // Fetch jobs from the API
+    const jobsResponse = await fetch(`${API_BASE_URL}/jobs`);
+    if (!jobsResponse.ok) throw new Error("Failed to fetch jobs");
+    G.jobs = await jobsResponse.json();
     console.log("Jobs loaded:", G.jobs);
 
-    // Fetch users from the MySQL database.
-    const [users] = await pool.query('SELECT * FROM users');
-    G.users = users;
+    // Fetch users from the API
+    const usersResponse = await fetch(`${API_BASE_URL}/users`);
+    if (!usersResponse.ok) throw new Error("Failed to fetch users");
+    G.users = await usersResponse.json();
     console.log("Users loaded:", G.users);
   } catch (error) {
     console.error("Error loading data:", error);
@@ -37,13 +31,13 @@ export async function loadData() {
  */
 export async function updateJobStatus(jobId, newStatus) {
   try {
-    // Fetch the current job from the database.
-    const [jobs] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
-    if (jobs.length === 0) {
+    // Fetch the current job data from the API.
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!jobResponse.ok) {
       console.error("Job not found.");
       return;
     }
-    const job = jobs[0];
+    const job = await jobResponse.json();
 
     // Generate timestamp in DD/MM/YYYY HH:MM:SS format.
     const currentTime = new Date();
@@ -67,20 +61,29 @@ export async function updateJobStatus(jobId, newStatus) {
       return;
     }
 
-    // Determine onsiteTime (if not already set, assign formattedTime)
+    // Determine onsiteTime (if not set, assign formattedTime)
     const onsiteTime = (!job.onsiteTime || job.onsiteTime === "N/A") ? formattedTime : job.onsiteTime;
 
-    // Update the job record in MySQL.
-    const [result] = await pool.query(
-      `UPDATE jobs 
-       SET status = ?, contractorStatus = ?, statusTimestamp = ?, onsiteTime = ?
-       WHERE id = ?`,
-      [updatedStatus, contractorStatus, formattedTime, onsiteTime, jobId]
-    );
-    if (result.affectedRows === 0) throw new Error("Failed to update job status.");
+    // Merge updated fields with the existing job object.
+    const updatedJob = {
+      ...job,
+      status: updatedStatus,
+      contractorStatus: contractorStatus,
+      statusTimestamp: formattedTime,
+      onsiteTime: onsiteTime,
+    };
+
+    // Send a PUT request to update the job via your API.
+    const putResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedJob),
+    });
+    if (!putResponse.ok) throw new Error("Failed to update job status.");
 
     console.log(statusMessage);
-    // Reload global data and refresh both views.
+    alert(statusMessage);
+    // Reload global data and refresh views.
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.jobs);
@@ -94,7 +97,10 @@ export async function updateJobStatus(jobId, newStatus) {
  */
 export async function checkForJobUpdates() {
   try {
-    const [latestJobs] = await pool.query('SELECT * FROM jobs');
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) throw new Error("Failed to fetch jobs");
+    const latestJobs = await response.json();
+
     // Compare with current global G.jobs.
     if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
       console.log("Job list updated. Refreshing admin dashboard...");
@@ -111,8 +117,10 @@ export async function checkForJobUpdates() {
  */
 export async function refreshContractorView() {
   try {
-    const [jobs] = await pool.query('SELECT * FROM jobs');
-    G.jobs = jobs;
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) throw new Error("Failed to fetch jobs");
+    G.jobs = await response.json();
+
     // If you have a global G.users array for contractors:
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     console.log("Contractor view refreshed with updated job data.", contractor);
@@ -127,9 +135,10 @@ export async function refreshContractorView() {
 export async function deleteJob(jobId) {
   if (confirm("Are you sure you want to delete this job?")) {
     try {
-      // Execute a DELETE query for the given job.
-      const [result] = await pool.query('DELETE FROM jobs WHERE id = ?', [jobId]);
-      if (result.affectedRows === 0) throw new Error("Failed to delete job.");
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete job.");
       alert("Job deleted successfully.");
       // Optionally reload jobs after deletion.
       await loadData();

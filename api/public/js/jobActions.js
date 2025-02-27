@@ -1,32 +1,22 @@
-// jobActions.js
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
 import { loadData } from './api.js';
-import mysql from 'mysql2/promise';
 
-// Create a MySQL connection pool using Aiven credentials from environment variables.
-const pool = mysql.createPool({
-  host: process.env.AIVEN_MYSQL_HOST,         // e.g. prefect-app-prefect-app.c.aivencloud.com
-  user: process.env.AIVEN_MYSQL_USER,          // e.g. avnadmin
-  password: process.env.AIVEN_MYSQL_PASSWORD,  // your password
-  database: process.env.AIVEN_MYSQL_DATABASE,  // e.g. PrefectAppDB
-  port: process.env.AIVEN_MYSQL_PORT || 3306,   // e.g. 13590
-  ssl: { rejectUnauthorized: false },
-});
+// Base URL for your backend API on Render
+const API_BASE_URL = 'https://prefect-app.onrender.com';
 
 /**
  * Move job from Pending -> In Progress -> Completed - Pending Approval.
  */
 export async function moveJobToInProgress(jobId) {
   try {
-    // Fetch the job record from MySQL
-    const [jobs] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
-    if (jobs.length === 0) {
-      // You can adjust error handling as needed
+    // Fetch the specific job from your API
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!jobResponse.ok) {
       console.error("Job not found.");
       return;
     }
-    const job = jobs[0];
+    const job = await jobResponse.json();
 
     // Generate timestamp in DD/MM/YYYY HH:MM:SS format.
     const currentTime = new Date();
@@ -50,45 +40,61 @@ export async function moveJobToInProgress(jobId) {
       return;
     }
 
-    // Determine onsiteTime value (if not set, assign the formatted time)
+    // Determine onsiteTime value
     const onsiteTime = (!job.onsiteTime || job.onsiteTime === "N/A") ? formattedTime : job.onsiteTime;
 
-    // Update the job record in the database.
-    const [result] = await pool.query(
-      `UPDATE jobs 
-       SET status = ?, contractorStatus = ?, statusTimestamp = ?, onsiteTime = ?
-       WHERE id = ?`,
-      [updatedStatus, contractorStatus, formattedTime, onsiteTime, jobId]
-    );
-    if (result.affectedRows === 0) throw new Error("Failed to update job status.");
+    // Merge updated fields with existing job
+    const updatedJob = {
+      ...job,
+      status: updatedStatus,
+      contractorStatus: contractorStatus,
+      statusTimestamp: formattedTime,
+      onsiteTime: onsiteTime,
+    };
 
-    console.log(statusMessage);
-    // Reload global data and refresh both views.
+    // Send a PUT request to update the job via your API
+    const putResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedJob)
+    });
+    if (!putResponse.ok) {
+      throw new Error("Failed to update job status.");
+    }
+
+    alert(statusMessage);
+    // Reload global data and refresh views.
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.jobs);
   } catch (error) {
     console.error("Error updating job status:", error);
+    alert("Failed to update job status.");
   }
 }
 
 /**
  * Show extended job update form (with signature, machine selection, etc.).
- * This function fetches data directly from MySQL and then renders an HTML form.
+ * This function now fetches job and machine data from your API.
  */
 export async function showUpdateJobForm(jobId) {
   try {
-    // Fetch the job record from MySQL.
-    const [jobRows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
-    if (jobRows.length === 0) {
+    // Fetch the job record from the API.
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!jobResponse.ok) {
       console.error("Job not found!");
       return;
     }
-    const job = jobRows[0];
+    const job = await jobResponse.json();
 
-    // Fetch available machines from the MySQL database.
-    const [machinesRows] = await pool.query('SELECT * FROM machines');
-    const availableMachines = machinesRows;
+    // Fetch available machines from the API.
+    const machinesResponse = await fetch(`${API_BASE_URL}/machines`);
+    let availableMachines = [];
+    if (machinesResponse.ok) {
+      availableMachines = await machinesResponse.json();
+    } else {
+      console.error("Error fetching machines:", machinesResponse.statusText);
+    }
 
     // Remove any existing form or overlay.
     const existingForm = document.getElementById("updateJobContainer");
@@ -293,7 +299,7 @@ export async function showUpdateJobForm(jobId) {
       }
     });
 
-    // Handle form submission: update the job in MySQL.
+    // Handle form submission: update the job via your API.
     document.getElementById("updateJobForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       let newStatus = document.getElementById("jobStatus").value;
@@ -331,29 +337,13 @@ export async function showUpdateJobForm(jobId) {
         // Merge updated data with the existing job object.
         const updatedJob = { ...job, ...updatedJobData };
 
-        // Update the job record in the database.
-        const updateQuery = `
-          UPDATE jobs 
-          SET customerName = ?, contactName = ?, workPerformed = ?, travelTime = ?, labourTime = ?,
-              status = ?, contractorStatus = ?, completionDate = ?, checklist = ?, signature = ?, machines = ?
-          WHERE id = ?
-        `;
-        const params = [
-          updatedJob.customerName,
-          updatedJob.contactName,
-          updatedJob.workPerformed,
-          updatedJob.travelTime,
-          updatedJob.labourTime,
-          updatedJob.status,
-          updatedJob.contractorStatus,
-          updatedJob.completionDate,
-          JSON.stringify(updatedJob.checklist),
-          updatedJob.signature,
-          JSON.stringify(updatedJob.machines),
-          job.id,
-        ];
-        const [result] = await pool.query(updateQuery, params);
-        if (result.affectedRows === 0) throw new Error("Failed to update job.");
+        // Send a PUT request to update the job via your API.
+        const putResponse = await fetch(`${API_BASE_URL}/jobs/${job.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedJob)
+        });
+        if (!putResponse.ok) throw new Error("Failed to update job.");
         alert("Job updated successfully and submitted for admin approval.");
         updateFormContainer.remove();
         modalOverlay.remove();
