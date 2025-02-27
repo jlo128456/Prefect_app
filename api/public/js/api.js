@@ -1,8 +1,7 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
+import { loadData } from './api.js';
 
-
-// Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
 
 /**
@@ -87,6 +86,7 @@ export async function updateJobStatus(jobId) {
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.jobs);
+    showDashboard(G.currentUserRole); // Call showDashboard to update the UI
   } catch (error) {
     console.error("Error updating job status:", error);
   }
@@ -106,6 +106,7 @@ export async function checkForJobUpdates() {
       console.log("Job list updated. Refreshing admin dashboard...");
       G.jobs = latestJobs;
       // Optionally, trigger re-population of the admin dashboard.
+      showDashboard(G.currentUserRole);
     }
   } catch (error) {
     console.error("Error checking for job updates:", error);
@@ -124,6 +125,7 @@ export async function refreshContractorView() {
     // If you have a global G.users array for contractors:
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     console.log("Contractor view refreshed with updated job data.", contractor);
+    showDashboard(G.currentUserRole); // Update dashboard for contractor view
   } catch (error) {
     console.error("Error refreshing contractor view:", error);
   }
@@ -142,6 +144,7 @@ export async function deleteJob(jobId) {
       alert("Job deleted successfully.");
       // Optionally reload jobs after deletion.
       await loadData();
+      showDashboard(G.currentUserRole); // Update dashboard after deletion
     } catch (error) {
       console.error("Error deleting job:", error);
       alert("Failed to delete the job.");
