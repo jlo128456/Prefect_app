@@ -1,6 +1,6 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
-import { loadData } from './api.js';
+
 
 // Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
@@ -29,7 +29,7 @@ export async function loadData() {
 /**
  * Update a job's status.
  */
-export async function updateJobStatus(jobId, newStatus) {
+export async function updateJobStatus(jobId) {
   try {
     // Fetch the current job data from the API.
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
