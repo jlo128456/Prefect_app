@@ -96,9 +96,16 @@ export async function refreshContractorView() {
   const allJobs = await fetchData('jobs');
   if (!allJobs) return;
 
-  G.jobs = G.currentUserRole === 'contractor' && G.currentUser
-    ? allJobs.filter(job => job.assignedContractor === G.currentUser)
-    : allJobs;
+  if (G.currentUser && (G.currentUserRole === 'contractor' || G.currentUserRole === 'technician')) {
+    // Filter jobs based on the user's role and their unique id
+    if (G.currentUserRole === 'contractor') {
+      G.jobs = allJobs.filter(job => job.assignedContractor === G.currentUser.id);
+    } else if (G.currentUserRole === 'technician') {
+      G.jobs = allJobs.filter(job => job.assignedTech === G.currentUser.id);
+    }
+  } else {
+    G.jobs = allJobs;
+  }
 
   console.log('Contractor view refreshed for', G.currentUser);
   showDashboard(G.currentUserRole);
