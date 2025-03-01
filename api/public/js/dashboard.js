@@ -7,40 +7,49 @@ import { moveJobToInProgress, showUpdateJobForm } from './jobActions.js';
  * Show the appropriate dashboard (admin, contractor, or tech).
  */
 export function showDashboard(role) {
+  // Hide all views first
+  G.adminView.style.display = "none";
+  G.contractorView.style.display = "none";
+  G.techView.style.display = "none";
+
+  // Clear existing polling interval (if any)
+  if (G.pollingInterval) {
+    clearInterval(G.pollingInterval);
+    G.pollingInterval = null;
+  }
+
   if (role === "admin") {
     G.adminView.style.display = "block";
     populateAdminJobs();
 
     // Start polling for updates if not already
-    if (!G.pollingInterval) {
-      G.pollingInterval = setInterval(async () => {
-        await checkForJobUpdates();
-        populateAdminJobs();
-      }, 5000);
-    }
+    G.pollingInterval = setInterval(async () => {
+      await checkForJobUpdates();
+      populateAdminJobs();
+    }, 5000);
+
   } else if (role === "contractor") {
     G.contractorView.style.display = "block";
     const contractor = G.users.find(u => u.role === "contractor")?.username;
     populateContractorJobs(contractor);
 
-    // Poll for contractor updates
     G.pollingInterval = setInterval(async () => {
       await refreshContractorView();
       populateContractorJobs(contractor);
     }, 5000);
+
   } else if (role === "technician") {
+    // Show Tech view
     G.techView.style.display = "block";
     const technician = G.users.find(u => u.role === "technician")?.username;
     populateTechJobs(technician);
 
-    // Poll for tech updates
     G.pollingInterval = setInterval(async () => {
       await refreshContractorView();
       populateTechJobs(technician);
     }, 5000);
   }
 }
-
 /**
  * Populate Admin Dashboard (table of jobs).
  */
