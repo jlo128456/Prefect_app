@@ -72,6 +72,12 @@ export function populateAdminJobs() {
     G.adminJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
+  document.querySelectorAll(".approve-job").forEach(button =>
+    button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Approved"))
+  );
+  document.querySelectorAll(".reject-job").forEach(button =>
+    button.addEventListener("click", (e) => updateJobStatus(e.target.dataset.id, "Pending"))
+  );
 }
 
 /**
