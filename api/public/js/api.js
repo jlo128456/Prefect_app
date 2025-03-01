@@ -98,9 +98,12 @@ export async function refreshContractorView() {
     if (!response.ok) return;
     const allJobs = await response.json();
 
+     
     if (G.currentUser && (G.currentUserRole === 'contractor' || G.currentUserRole === 'technician')) {
       G.jobs = allJobs.filter(job => 
-        G.currentUserRole === 'contractor' ? job.assignedContractor === G.currentUser.id : job.assignedTech === G.currentUser.id
+        G.currentUserRole === 'contractor'
+          ? job.assignedContractor === G.currentUser.id
+          : job.assignedTech === G.currentUser.id
       );
     } else {
       G.jobs = allJobs;
@@ -112,7 +115,6 @@ export async function refreshContractorView() {
     console.error('Error refreshing contractor view:', error);
   }
 }
-
 /**
  * Delete a job and refresh the UI.
  * @param {number} jobId - The job ID.
