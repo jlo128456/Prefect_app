@@ -4,30 +4,24 @@ import { populateAdminJobs, populateContractorJobs, showDashboard } from './dash
 const API_BASE_URL = 'https://prefect-app.onrender.com';
 
 /**
- * Fetch data from the API.
- * @param {string} endpoint - API endpoint to fetch.
- * @returns {Promise<any>} - The response JSON.
- */
-async function fetchData(endpoint) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`);
-    if (!response.ok) throw new Error(`Failed to fetch ${endpoint}`);
-    return await response.json();
-  } catch (error) {
-    console.error(`Error fetching ${endpoint}:`, error);
-    return null;
-  }
-}
-
-/**
  * Load jobs and users from the API and store them in globals.
  */
 export async function loadData() {
-  G.jobs = await fetchData('jobs') || [];
-  console.log('Jobs loaded:', G.jobs);
+  try {
+    const jobsResponse = await fetch(`${API_BASE_URL}/jobs`);
+    if (!jobsResponse.ok) throw new Error('Failed to fetch jobs');
+    G.jobs = await jobsResponse.json();
+    console.log('Jobs loaded:', G.jobs);
 
-  G.users = await fetchData('users') || [];
-  console.log('Users loaded:', G.users);
+    const usersResponse = await fetch(`${API_BASE_URL}/users`);
+    if (!usersResponse.ok) throw new Error('Failed to fetch users');
+    G.users = await usersResponse.json();
+    console.log('Users loaded:', G.users);
+  } catch (error) {
+    console.error('Error loading data:', error);
+    G.jobs = [];
+    G.users = [];
+  }
 }
 
 /**
@@ -36,7 +30,9 @@ export async function loadData() {
  */
 export async function updateJobStatus(jobId) {
   try {
-    const job = await fetchData(`jobs/${jobId}`);
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!response.ok) throw new Error('Failed to fetch job');
+    const job = await response.json();
     if (!job) return;
 
     const currentTime = new Date().toLocaleString('en-GB');
@@ -59,12 +55,12 @@ export async function updateJobStatus(jobId) {
     }
 
     const updatedJob = { ...job, status: updatedStatus, contractorStatus, statusTimestamp: currentTime };
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    const updateResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedJob),
     });
-    if (!response.ok) throw new Error('Failed to update job status.');
+    if (!updateResponse.ok) throw new Error('Failed to update job status.');
 
     console.log(statusMessage);
     alert(statusMessage);
@@ -79,13 +75,17 @@ export async function updateJobStatus(jobId) {
  * Periodically check for job updates and refresh the UI.
  */
 export async function checkForJobUpdates() {
-  const latestJobs = await fetchData('jobs');
-  if (!latestJobs) return;
-
-  if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
-    console.log('Job list updated. Refreshing dashboard...');
-    G.jobs = latestJobs;
-    refreshDashboard();
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) return;
+    const latestJobs = await response.json();
+    if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
+      console.log('Job list updated. Refreshing dashboard...');
+      G.jobs = latestJobs;
+      refreshDashboard();
+    }
+  } catch (error) {
+    console.error('Error checking job updates:', error);
   }
 }
 
@@ -93,22 +93,24 @@ export async function checkForJobUpdates() {
  * Refresh contractor's job view.
  */
 export async function refreshContractorView() {
-  const allJobs = await fetchData('jobs');
-  if (!allJobs) return;
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) return;
+    const allJobs = await response.json();
 
-  if (G.currentUser && (G.currentUserRole === 'contractor' || G.currentUserRole === 'technician')) {
-    // Filter jobs based on the user's role and their unique id
-    if (G.currentUserRole === 'contractor') {
-      G.jobs = allJobs.filter(job => job.assignedContractor === G.currentUser.id);
-    } else if (G.currentUserRole === 'technician') {
-      G.jobs = allJobs.filter(job => job.assignedTech === G.currentUser.id);
+    if (G.currentUser && (G.currentUserRole === 'contractor' || G.currentUserRole === 'technician')) {
+      G.jobs = allJobs.filter(job => 
+        G.currentUserRole === 'contractor' ? job.assignedContractor === G.currentUser.id : job.assignedTech === G.currentUser.id
+      );
+    } else {
+      G.jobs = allJobs;
     }
-  } else {
-    G.jobs = allJobs;
-  }
 
-  console.log('Contractor view refreshed for', G.currentUser);
-  showDashboard(G.currentUserRole);
+    console.log('Contractor view refreshed for', G.currentUser);
+    showDashboard(G.currentUserRole);
+  } catch (error) {
+    console.error('Error refreshing contractor view:', error);
+  }
 }
 
 /**
