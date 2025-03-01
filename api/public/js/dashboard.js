@@ -59,7 +59,7 @@ export function populateAdminJobs() {
   }
 
   G.jobs.forEach(job => {
-    const lastUpdated = job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A";
+    const lastUpdated = job.status_timestamp ? formatDateTime(job.status_timestamp) : "N/A";
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${job.work_order}</td>
