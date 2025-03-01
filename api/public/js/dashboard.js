@@ -70,6 +70,7 @@ export function populateAdminJobs() {
       <td>${job.work_order ? job.work_order : 'N/A'}</td>
       <td>${job.customer_name ? job.customer_name : 'N/A'}</td>
       <td>${job.contractor ? job.contractor : 'N/A'}</td>
+      <td>${job.role ? job.role : 'N/A'}</td>      <!-- Display 'role' here -->
       <td class="status-cell">${job.status ? job.status : 'N/A'}</td>
     `;
 
