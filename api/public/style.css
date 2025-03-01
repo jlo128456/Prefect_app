@@ -140,7 +140,7 @@ form button:hover {
   }  
 
 /* Dashboard Section Styling */
-#adminView, #contractorView {
+#adminView, #contractorView, #techView {
     display: none; /* Hide by default */
     flex-direction: column; /* Stack sections vertically */
     align-items: center; /* Center-align content */
