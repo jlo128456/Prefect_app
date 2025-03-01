@@ -52,32 +52,24 @@ export function showDashboard(role) {
 export function populateAdminJobs() {
   G.adminJobList.innerHTML = "";
 
-  // Check if G.jobs is actually an array
   if (!Array.isArray(G.jobs)) {
-    console.error("G.jobs is not an array. Current value:", G.jobs);
+    console.error("❌ G.jobs is not an array. Current value:", G.jobs);
     return;
   }
 
+  // Debugging: Print each job's properties
   G.jobs.forEach(job => {
-    const lastUpdated = job.status_timestamp ? formatDateTime(job.status_timestamp) : "N/A";
+    console.log("✅ Job Data:", job);
+    console.log("Work Order:", job.work_order); // Ensure this prints correctly
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.work_order}</td>
-      <td>${job.customer_name}</td>
-      <td>${job.contractor}</td>
-      <td class="status-cell">${job.status}</td>
-      <td>${lastUpdated}</td>
-      <td>
-        ${
-          job.status === "Completed - Pending Approval" 
-            ? `
-               <button class="btn btn-success btn-sm approve-job" data-id="${job.id}">Approve</button>
-               <button class="btn btn-warning btn-sm reject-job" data-id="${job.id}">Reject</button>
-              `
-            : "N/A"
-        }
-      </td>
+      <td>${job.work_order ? job.work_order : 'N/A'}</td>
+      <td>${job.customer_name ? job.customer_name : 'N/A'}</td>
+      <td>${job.contractor ? job.contractor : 'N/A'}</td>
+      <td class="status-cell">${job.status ? job.status : 'N/A'}</td>
     `;
+
     G.adminJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
