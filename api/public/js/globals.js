@@ -12,5 +12,8 @@ export const G = {
   contractorView: document.getElementById("contractorView"),
   contractorJobList: document.getElementById("contractorJobList"),
   adminJobList: document.getElementById("adminJobList"),
+   // NEW: Add references for the tech view
+  techView: document.getElementById("techView"),
+  techJobList: document.getElementById("techJobList"),
 };
 window.G = G;

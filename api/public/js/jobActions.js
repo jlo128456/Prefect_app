@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
+import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
 import { loadData } from './api.js';
 
 // Base URL for your backend API on Render
@@ -70,6 +70,7 @@ export async function moveJobToInProgress(jobId) {
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.jobs);
+    populateTechJobs(G.jobs)
   } catch (error) {
     console.error('Error updating job status:', error);
     alert('Failed to update job status.');
@@ -229,19 +230,20 @@ export async function showUpdateJobForm(jobId) {
     updateFormContainer.innerHTML = formHTML;
     document.body.appendChild(updateFormContainer);
 
-    // Create overlay.
-    const modalOverlay = document.createElement('div');
-    modalOverlay.id = 'modalOverlay';
-    Object.assign(modalOverlay.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%',
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: '999',
-    });
-    document.body.appendChild(modalOverlay);
+    // --- The second overlay creation is commented out to avoid redeclaration ---
+    // // Create overlay.
+    // const modalOverlay = document.createElement('div');
+    // modalOverlay.id = 'modalOverlay';
+    // Object.assign(modalOverlay.style, {
+    //   position: 'fixed',
+    //   top: '0',
+    //   left: '0',
+    //   width: '100%',
+    //   height: '100%',
+    //   background: 'rgba(0, 0, 0, 0.5)',
+    //   zIndex: '999',
+    // });
+    // document.body.appendChild(modalOverlay);
 
     // --- Signature Pad Setup ---
     const signatureCanvas = document.getElementById('signatureCanvas');

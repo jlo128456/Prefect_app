@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { populateAdminJobs, populateContractorJobs, showDashboard } from './dashboard.js';
+import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
 
 const API_BASE_URL = 'https://prefect-app.onrender.com';
 
@@ -135,8 +135,11 @@ export async function deleteJob(jobId) {
  * Refresh the dashboard view based on the user role.
  */
 function refreshDashboard() {
+  // ---- ONLY CHANGE: added 'else if (G.currentUserRole === "technician")' ----
   if (G.currentUserRole === 'admin') {
     populateAdminJobs(G.jobs);
+  } else if (G.currentUserRole === 'technician') {
+    populateTechJobs(G.jobs);
   } else {
     populateContractorJobs(G.jobs);
   }
