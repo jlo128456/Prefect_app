@@ -13,3 +13,4 @@ export const G = {
   contractorJobList: document.getElementById("contractorJobList"),
   adminJobList: document.getElementById("adminJobList"),
 };
+window.G = G;
