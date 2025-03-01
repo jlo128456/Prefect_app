@@ -98,26 +98,38 @@ export async function refreshContractorView() {
     if (!response.ok) return;
     const allJobs = await response.json();
 
-     
-    if (G.currentUser && (G.currentUserRole === 'contractor' || G.currentUserRole === 'technician')) {
+    if (!G.currentUser) {
+      // If no user is logged in, no jobs
+      G.jobs = [];
+    } else if (G.currentUserRole === 'admin') {
+      // Admin sees all jobs
+      G.jobs = allJobs;
+    } else if (G.currentUserRole === 'contractor') {
+      // Filter for 'contractor' jobs AND check assignedContractor if needed
       G.jobs = allJobs.filter(job => 
-        G.currentUserRole === 'contractor'
-          ? job.assignedContractor === G.currentUser.id
-          : job.assignedTech === G.currentUser.id
+        job.role === 'contractor' && 
+        job.assignedContractor === G.currentUser.id
+      );
+    } else if (G.currentUserRole === 'technician') {
+      // Filter for 'technician' jobs AND check assignedTech if needed
+      G.jobs = allJobs.filter(job =>
+        job.role === 'technician' &&
+        job.assignedTech === G.currentUser.id
       );
     } else {
-      G.jobs = allJobs;
+      // Fallback: if there's some unknown role, no jobs
+      G.jobs = [];
     }
 
-    console.log('Contractor view refreshed for', G.currentUser);
+    console.log('Job list filtered for role:', G.currentUserRole, G.jobs);
     showDashboard(G.currentUserRole);
   } catch (error) {
-    console.error('Error refreshing contractor view:', error);
+    console.error('Error refreshing contractor/tech view:', error);
   }
 }
 /**
  * Delete a job and refresh the UI.
- * @param {number} jobId - The job ID.
+ *
  */
 export async function deleteJob(jobId) {
   if (!confirm('Are you sure you want to delete this job?')) return;
@@ -137,13 +149,14 @@ export async function deleteJob(jobId) {
  * Refresh the dashboard view based on the user role.
  */
 function refreshDashboard() {
-  // ---- ONLY CHANGE: added 'else if (G.currentUserRole === "technician")' ----
   if (G.currentUserRole === 'admin') {
     populateAdminJobs(G.jobs);
   } else if (G.currentUserRole === 'technician') {
     populateTechJobs(G.jobs);
   } else {
+    // default to contractor view
     populateContractorJobs(G.jobs);
   }
   showDashboard(G.currentUserRole);
 }
+
