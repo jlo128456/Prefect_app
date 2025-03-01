@@ -28,9 +28,9 @@ export function showDashboard(role) {
       await refreshContractorView();
       populateContractorJobs(contractor);
     }, 5000);
-  } else if (role === "tech") {
+  } else if (role === "technician") {
     G.techView.style.display = "block";
-    const technician = G.users.find(u => u.role === "tech")?.username;
+    const technician = G.users.find(u => u.role === "technician")?.username;
     populateTechJobs(technician);
 
     // Poll for tech updates
@@ -95,7 +95,7 @@ export function populateContractorJobs(contractor) {
   }
 
   contractorJobs.forEach(job => {
-    const displayStatus = job.contractorStatus || job.status;
+    const displayStatus = job.contractor_status || job.status;
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -154,7 +154,7 @@ export function populateTechJobs(technician) {
   }
 
   techJobs.forEach(job => {
-    const displayStatus = job.contractorStatus || job.status;
+    const displayStatus = job.contractor_status || job.status;
 
     const row = document.createElement("tr");
     row.innerHTML = `

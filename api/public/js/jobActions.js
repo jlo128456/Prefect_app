@@ -110,6 +110,7 @@ export async function showUpdateJobForm(jobId) {
     // Hide main views.
     G.adminView.style.display = 'none';
     G.contractorView.style.display = 'none';
+    G.techView.style.display ='none'
 
     // Create overlay.
     const modalOverlay = document.createElement('div');
