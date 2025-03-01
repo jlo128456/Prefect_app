@@ -56,11 +56,11 @@ export function showDashboard(role) {
 export function populateAdminJobs() {
   G.adminJobList.innerHTML = "";
   if (!Array.isArray(G.jobs)) {
-    console.error("❌ G.jobs is not an array. Current value:", G.jobs);
+    console.error(" G.jobs is not an array. Current value:", G.jobs);
     return;
   }
   G.jobs.forEach(job => {
-    console.log("✅ Job Data:", job);
+    console.log(" Job Data:", job);
     console.log("Work Order:", job.work_order);
     const row = document.createElement("tr");
     row.innerHTML = `
