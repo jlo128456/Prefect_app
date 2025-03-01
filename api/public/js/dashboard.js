@@ -62,8 +62,8 @@ export function populateAdminJobs() {
     const lastUpdated = job.statusTimestamp ? formatDateTime(job.statusTimestamp) : "N/A";
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.workOrder}</td>
-      <td>${job.customerName}</td>
+      <td>${job.work_order}</td>
+      <td>${job.customer_name}</td>
       <td>${job.contractor}</td>
       <td class="status-cell">${job.status}</td>
       <td>${lastUpdated}</td>
