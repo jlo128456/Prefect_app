@@ -25,8 +25,8 @@ export async function loadData() {
 }
 
 /**
- * Update a job's status and refresh the UI.
- * @param {number} jobId - The job ID.
+ * 
+ *
  */
 export async function updateJobStatus(jobId) {
   try {
@@ -99,25 +99,27 @@ export async function refreshContractorView() {
     const allJobs = await response.json();
 
     if (!G.currentUser) {
-      // If no user is logged in, no jobs
+      // If no user is logged in, no jobs are shown
       G.jobs = [];
     } else if (G.currentUserRole === 'admin') {
       // Admin sees all jobs
       G.jobs = allJobs;
     } else if (G.currentUserRole === 'contractor') {
-      // Filter for 'contractor' jobs AND check assignedContractor if needed
+      // Contractor: Filter jobs where job.role is 'contractor' 
+      // and the assigned contractor matches the user's ID.
       G.jobs = allJobs.filter(job => 
         job.role === 'contractor' && 
         job.assignedContractor === G.currentUser.id
       );
     } else if (G.currentUserRole === 'technician') {
-      // Filter for 'technician' jobs AND check assignedTech if needed
+      // Technician: Filter jobs where job.role is 'technician'
+      // and the assigned technician matches the user's ID.
       G.jobs = allJobs.filter(job =>
         job.role === 'technician' &&
         job.assignedTech === G.currentUser.id
       );
     } else {
-      // Fallback: if there's some unknown role, no jobs
+      // If the role is unknown, don't show any jobs.
       G.jobs = [];
     }
 
@@ -127,6 +129,7 @@ export async function refreshContractorView() {
     console.error('Error refreshing contractor/tech view:', error);
   }
 }
+
 /**
  * Delete a job and refresh the UI.
  *
@@ -159,4 +162,3 @@ function refreshDashboard() {
   }
   showDashboard(G.currentUserRole);
 }
-
