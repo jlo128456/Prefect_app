@@ -1,22 +1,21 @@
 // server.js
 import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables from .env
+
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable CORS for all routes and JSON body parsing
+// Enable CORS for all routes and parse JSON bodies
 app.use(cors());
 app.use(express.json());
 
-/// Serve static HTML files from the "public" directory
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Create a MySQL connection pool using remote credentials
+// Always use remote MySQL (e.g., Aiven) credentials
 const pool = mysql.createPool({
   host: process.env.AIVEN_MYSQL_HOST,         // e.g., your-aiven-host.aivencloud.com
   user: process.env.AIVEN_MYSQL_USER,          // your MySQL username
@@ -24,16 +23,32 @@ const pool = mysql.createPool({
   database: process.env.AIVEN_MYSQL_DATABASE,  // your database name
   port: process.env.AIVEN_MYSQL_PORT || 3306,
   ssl: {
-    // Aiven (or other remote hosts) often requires SSL.
+    // Aiven requires SSL. This setting skips certificate verification.
     rejectUnauthorized: false,
   },
 });
 
+// If running locally with static HTML, serve files from the public folder
+if (process.env.LOCAL_STATIC === 'true') {
+  // Resolve directory path in ES modules
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  // Optional: For SPA routing, serve index.html for unmatched routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  console.log('Serving static files from the public folder (local mode)');
+}
+
 /**
- * JOBS ENDPOINTS
+ * API ENDPOINTS
  */
 
-// Get all jobs
+// JOBS ENDPOINTS
 app.get('/jobs', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM jobs');
@@ -44,7 +59,6 @@ app.get('/jobs', async (req, res) => {
   }
 });
 
-// Create a new job
 app.post('/jobs', async (req, res) => {
   const { customerName, contactName, workPerformed, status = 'Pending' } = req.body;
   try {
@@ -57,11 +71,7 @@ app.post('/jobs', async (req, res) => {
   }
 });
 
-/**
- * USERS ENDPOINTS
- */
-
-// Get all users
+// USERS ENDPOINTS
 app.get('/users', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM users');
@@ -72,7 +82,6 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Create a new user
 app.post('/users', async (req, res) => {
   const { id, username, password, role } = req.body;
   try {
@@ -85,11 +94,7 @@ app.post('/users', async (req, res) => {
   }
 });
 
-/**
- * MACHINES ENDPOINTS
- */
-
-// Get all machines
+// MACHINES ENDPOINTS
 app.get('/machines', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM machines');
@@ -100,7 +105,6 @@ app.get('/machines', async (req, res) => {
   }
 });
 
-// Create a new machine
 app.post('/machines', async (req, res) => {
   const { machineType, model, notes, partsUsed } = req.body;
   try {
@@ -113,7 +117,7 @@ app.post('/machines', async (req, res) => {
   }
 });
 
-// Start the server on the specified port (running on localhost)
+// Start the server (API running on localhost)
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
