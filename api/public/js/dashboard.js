@@ -157,9 +157,10 @@ export function populateTechJobs(technician) {
     return;
   }
 
+  // Adjust the filter property if needed (e.g., job.assignedTech instead of job.technician)
   const techJobs = G.jobs.filter(job => job.technician === technician);
   if (techJobs.length === 0) {
-    G.techJobList.innerHTML = `<tr><td colspan="4">No jobs found for this technician.</td></tr>`;
+    G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
   }
 
@@ -170,6 +171,7 @@ export function populateTechJobs(technician) {
     row.innerHTML = `
       <td>${job.work_order}</td>
       <td>${job.customer_name}</td>
+      <td>${job.contractor_name || 'N/A'}</td>
       <td>${job.required_date}</td>
       <td>${job.onsite_time ? job.onsite_time : "Not Logged"}</td>
       <td class="status-cell">${displayStatus}</td>
@@ -183,6 +185,7 @@ export function populateTechJobs(technician) {
       </td>
     `;
 
+    // Allow clicking on the work order cell to view work required details
     const workOrderCell = row.querySelector("td:first-child");
     workOrderCell.style.cursor = "pointer";
     workOrderCell.addEventListener("click", e => {
@@ -194,12 +197,12 @@ export function populateTechJobs(technician) {
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
 
-  // Onsite -> moves job to In Progress
+  // Add event listeners for "Onsite" buttons to move the job to In Progress
   G.techJobList.querySelectorAll(".onsite-job").forEach(button =>
     button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
   );
 
-  // Show the extended job update form
+  // Add event listeners for "Job Completed" buttons to show the extended update form
   G.techJobList.querySelectorAll(".update-job").forEach(button =>
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );

@@ -7,24 +7,40 @@ import mysql from 'mysql2/promise';
 
 const app = express();
 const port = process.env.PORT || 3000;
-// Enable CORS for all routes
+
+// Enable CORS for all routes and JSON body parsing
 app.use(cors());
-
-// Create a MySQL connection pool using Aiven credentials from environment variables
-const pool = mysql.createPool({
-  host: process.env.AIVEN_MYSQL_HOST,         // e.g., your-aiven-host.aivencloud.com
-  user: process.env.AIVEN_MYSQL_USER,          // your MySQL username
-  password: process.env.AIVEN_MYSQL_PASSWORD,  // your MySQL password
-  database: process.env.AIVEN_MYSQL_DATABASE,  // your database name
-  port: process.env.AIVEN_MYSQL_PORT || 3306,
-  ssl: {
-    // Aiven requires SSL. This setting skips certificate verification.
-    rejectUnauthorized: false,
-  },
-});
-
-// Middleware to parse JSON bodies
 app.use(express.json());
+
+// Determine which MySQL configuration to use based on MYSQL_HOSTING
+const mysqlHosting = process.env.MYSQL_HOSTING || 'remote';
+let pool;
+
+if (mysqlHosting === 'local') {
+  // Local MySQL configuration
+  pool = mysql.createPool({
+    host: process.env.LOCAL_MYSQL_HOST || 'localhost',
+    user: process.env.LOCAL_MYSQL_USER || 'root',
+    password: process.env.LOCAL_MYSQL_PASSWORD || '',
+    database: process.env.LOCAL_MYSQL_DATABASE || 'my_local_db',
+    port: process.env.LOCAL_MYSQL_PORT || 3306,
+  });
+  console.log('Using local MySQL configuration');
+} else {
+  // Remote MySQL configuration (e.g., Aiven)
+  pool = mysql.createPool({
+    host: process.env.AIVEN_MYSQL_HOST,         // e.g., your-aiven-host.aivencloud.com
+    user: process.env.AIVEN_MYSQL_USER,          // your MySQL username
+    password: process.env.AIVEN_MYSQL_PASSWORD,  // your MySQL password
+    database: process.env.AIVEN_MYSQL_DATABASE,  // your database name
+    port: process.env.AIVEN_MYSQL_PORT || 3306,
+    ssl: {
+      // Remote MySQL (Aiven) requires SSL. This setting skips certificate verification.
+      rejectUnauthorized: false,
+    },
+  });
+  console.log('Using remote MySQL configuration');
+}
 
 /**
  * JOBS ENDPOINTS
@@ -71,16 +87,16 @@ app.get('/users', async (req, res) => {
 
 // Create a new user
 app.post('/users', async (req, res) => {
-    const { id, username, password, role } = req.body;
-    try {
-      const query = 'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)';
-      const [result] = await pool.query(query, [id, username, password, role]);
-      res.json({ id, username, role });
-    } catch (error) {
-      console.error('Error inserting user:', error);
-      res.status(500).json({ error: 'Database insert failed' });
-    }
-  });
+  const { id, username, password, role } = req.body;
+  try {
+    const query = 'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)';
+    const [result] = await pool.query(query, [id, username, password, role]);
+    res.json({ id, username, role });
+  } catch (error) {
+    console.error('Error inserting user:', error);
+    res.status(500).json({ error: 'Database insert failed' });
+  }
+});
 
 /**
  * MACHINES ENDPOINTS
@@ -110,8 +126,7 @@ app.post('/machines', async (req, res) => {
   }
 });
 
-// Start the server
+// Start the server on the specified port (running on localhost)
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
-
