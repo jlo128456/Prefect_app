@@ -34,12 +34,9 @@ if (process.env.LOCAL_STATIC === 'true') {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(path.join(__dirname, 'api', 'public')));
 
-  // Optional: For SPA routing, serve index.html for unmatched routes
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-  });
+
 
   console.log('Serving static files from the public folder (local mode)');
 }
