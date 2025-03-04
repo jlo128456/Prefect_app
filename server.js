@@ -12,35 +12,22 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Determine which MySQL configuration to use based on MYSQL_HOSTING
-const mysqlHosting = process.env.MYSQL_HOSTING || 'remote';
-let pool;
+/// Serve static HTML files from the "public" directory
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, 'public')));
 
-if (mysqlHosting === 'local') {
-  // Local MySQL configuration
-  pool = mysql.createPool({
-    host: process.env.LOCAL_MYSQL_HOST || 'localhost',
-    user: process.env.LOCAL_MYSQL_USER || 'root',
-    password: process.env.LOCAL_MYSQL_PASSWORD || '',
-    database: process.env.LOCAL_MYSQL_DATABASE || 'my_local_db',
-    port: process.env.LOCAL_MYSQL_PORT || 3306,
-  });
-  console.log('Using local MySQL configuration');
-} else {
-  // Remote MySQL configuration (e.g., Aiven)
-  pool = mysql.createPool({
-    host: process.env.AIVEN_MYSQL_HOST,         // e.g., your-aiven-host.aivencloud.com
-    user: process.env.AIVEN_MYSQL_USER,          // your MySQL username
-    password: process.env.AIVEN_MYSQL_PASSWORD,  // your MySQL password
-    database: process.env.AIVEN_MYSQL_DATABASE,  // your database name
-    port: process.env.AIVEN_MYSQL_PORT || 3306,
-    ssl: {
-      // Remote MySQL (Aiven) requires SSL. This setting skips certificate verification.
-      rejectUnauthorized: false,
-    },
-  });
-  console.log('Using remote MySQL configuration');
-}
+// Create a MySQL connection pool using remote credentials
+const pool = mysql.createPool({
+  host: process.env.AIVEN_MYSQL_HOST,         // e.g., your-aiven-host.aivencloud.com
+  user: process.env.AIVEN_MYSQL_USER,          // your MySQL username
+  password: process.env.AIVEN_MYSQL_PASSWORD,  // your MySQL password
+  database: process.env.AIVEN_MYSQL_DATABASE,  // your database name
+  port: process.env.AIVEN_MYSQL_PORT || 3306,
+  ssl: {
+    // Aiven (or other remote hosts) often requires SSL.
+    rejectUnauthorized: false,
+  },
+});
 
 /**
  * JOBS ENDPOINTS
