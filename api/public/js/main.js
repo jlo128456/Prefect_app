@@ -12,10 +12,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
-
+  
     // Find matching user
     const user = G.users.find(u => u.username === username && u.password === password);
     if (user) {
+      G.currentUser = user;             // <== Set the full user object
       G.currentUserRole = user.role;
       G.loginForm.style.display = "none";
       showDashboard(user.role);
@@ -23,4 +24,5 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Invalid username or password.");
     }
   });
+  
 });
