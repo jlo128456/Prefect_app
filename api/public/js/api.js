@@ -1,58 +1,166 @@
-export function populateTechJobs(technician) {
-  G.techJobList.innerHTML = "";
+// Dynamically set API_BASE_URL based on the environment
+const API_BASE_URL =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:3000' // Change this to your local API URL if different
+    : 'https://prefect-app.onrender.com';
 
-  if (!Array.isArray(G.jobs)) {
-    console.error("G.jobs is not an array. Current value:", G.jobs);
-    return;
+import { G } from './globals.js';
+import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
+
+/**
+ * Load jobs and users from the API and store them in globals.
+ */
+export async function loadData() {
+  try {
+    const jobsResponse = await fetch(`${API_BASE_URL}/jobs`);
+    if (!jobsResponse.ok) throw new Error('Failed to fetch jobs');
+    G.jobs = await jobsResponse.json();
+    console.log('Jobs loaded:', G.jobs);
+
+    const usersResponse = await fetch(`${API_BASE_URL}/users`);
+    if (!usersResponse.ok) throw new Error('Failed to fetch users');
+    G.users = await usersResponse.json();
+    console.log('Users loaded:', G.users);
+  } catch (error) {
+    console.error('Error loading data:', error);
+    G.jobs = [];
+    G.users = [];
   }
+}
 
-  // Adjust the filter property if needed (e.g., job.assignedTech instead of job.technician)
-  const techJobs = G.jobs.filter(job => job.technician === technician);
-  if (techJobs.length === 0) {
-    G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
-    return;
-  }
+/**
+ * Update a job's status and refresh the UI.
+ * @param {number} jobId - The job ID.
+ */
+export async function updateJobStatus(jobId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!response.ok) throw new Error('Failed to fetch job');
+    const job = await response.json();
+    if (!job) return;
 
-  techJobs.forEach(job => {
-    const displayStatus = job.contractor_status || job.status;
+    const currentTime = new Date().toLocaleString('en-GB');
+    let updatedStatus, contractorStatus, statusMessage;
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${job.work_order}</td>
-      <td>${job.customer_name}</td>
-      <td>${job.contractor_name || 'N/A'}</td>
-      <td>${job.required_date}</td>
-      <td>${job.onsite_time ? job.onsite_time : "Not Logged"}</td>
-      <td class="status-cell">${displayStatus}</td>
-      <td>
-        ${
-          job.status === "Pending"
-            ? `<button class="btn btn-info btn-sm onsite-job" data-id="${job.id}">Onsite</button>`
-            : ""
-        }
-        <button class="btn btn-success btn-sm update-job" data-id="${job.id}">Job Completed</button>
-      </td>
-    `;
+    switch (job.status) {
+      case 'Pending':
+        updatedStatus = 'In Progress';
+        contractorStatus = 'In Progress';
+        statusMessage = `Job moved to 'In Progress' at ${currentTime}.`;
+        break;
+      case 'In Progress':
+        updatedStatus = 'Completed - Pending Approval';
+        contractorStatus = 'Completed';
+        statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${currentTime}.`;
+        break;
+      default:
+        console.error('Invalid action: The job is already completed or approved.');
+        return;
+    }
 
-    // Allow clicking on the work order cell to view work required details
-    const workOrderCell = row.querySelector("td:first-child");
-    workOrderCell.style.cursor = "pointer";
-    workOrderCell.addEventListener("click", e => {
-      e.stopPropagation();
-      alert(`Work Required: ${job.work_required}`);
+    const updatedJob = { ...job, status: updatedStatus, contractorStatus, statusTimestamp: currentTime };
+    const updateResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedJob),
     });
+    if (!updateResponse.ok) throw new Error('Failed to update job status.');
 
-    G.techJobList.appendChild(row);
-    applyStatusColor(row.querySelector(".status-cell"), displayStatus);
-  });
+    console.log(statusMessage);
+    alert(statusMessage);
+    await loadData();
+    refreshDashboard();
+  } catch (error) {
+    console.error('Error updating job status:', error);
+  }
+}
 
-  // Add event listeners for "Onsite" buttons to move the job to In Progress
-  G.techJobList.querySelectorAll(".onsite-job").forEach(button =>
-    button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
-  );
+/**
+ * Periodically check for job updates and refresh the UI.
+ */
+export async function checkForJobUpdates() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) return;
+    const latestJobs = await response.json();
+    if (JSON.stringify(latestJobs) !== JSON.stringify(G.jobs)) {
+      console.log('Job list updated. Refreshing dashboard...');
+      G.jobs = latestJobs;
+      refreshDashboard();
+    }
+  } catch (error) {
+    console.error('Error checking job updates:', error);
+  }
+}
 
-  // Add event listeners for "Job Completed" buttons to show the extended update form
-  G.techJobList.querySelectorAll(".update-job").forEach(button =>
-    button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
-  );
+/**
+ * Refresh contractor's or technician's job view based on the current user.
+ */
+export async function refreshContractorView() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs`);
+    if (!response.ok) return;
+    const allJobs = await response.json();
+
+    if (!G.currentUser) {
+      // If no user is logged in, no jobs
+      G.jobs = [];
+    } else if (G.currentUserRole === 'admin') {
+      // Admin sees all jobs
+      G.jobs = allJobs;
+    } else if (G.currentUserRole === 'contractor') {
+      // Filter for 'contractor' jobs AND check assignedContractor if needed
+      G.jobs = allJobs.filter(job =>
+        job.role === 'contractor' &&
+        job.assignedContractor === G.currentUser.id
+      );
+    } else if (G.currentUserRole === 'technician') {
+      // Filter for 'technician' jobs AND check assignedTech if needed
+      G.jobs = allJobs.filter(job =>
+        job.role === 'technician' &&
+        job.assignedTech === G.currentUser.id
+      );
+    } else {
+      // Fallback: if there's some unknown role, no jobs
+      G.jobs = [];
+    }
+
+    console.log('Job list filtered for role:', G.currentUserRole, G.jobs);
+    showDashboard(G.currentUserRole);
+  } catch (error) {
+    console.error('Error refreshing contractor/tech view:', error);
+  }
+}
+
+/**
+ * Delete a job and refresh the UI.
+ */
+export async function deleteJob(jobId) {
+  if (!confirm('Are you sure you want to delete this job?')) return;
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete job.');
+    alert('Job deleted successfully.');
+    await loadData();
+    refreshDashboard();
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    alert('Failed to delete the job.');
+  }
+}
+
+/**
+ * Refresh the dashboard view based on the user role.
+ */
+function refreshDashboard() {
+  if (G.currentUserRole === 'admin') {
+    populateAdminJobs(G.jobs);
+  } else if (G.currentUserRole === 'technician') {
+    // Assuming the technician's ID is passed as an argument in populateTechJobs
+    populateTechJobs(G.currentUser.id);
+  } else {
+    // default to contractor view
+    populateContractorJobs(G.jobs);
+  }
+  showDashboard(G.currentUserRole);
 }
