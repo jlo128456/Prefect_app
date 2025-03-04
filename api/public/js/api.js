@@ -157,7 +157,7 @@ function refreshDashboard() {
     populateAdminJobs(G.jobs);
   } else if (G.currentUserRole === 'technician') {
     // Assuming the technician's ID is passed as an argument in populateTechJobs
-    populateTechJobs(G.currentUser.id);
+    populateTechJobs(G.jobs);
   } else {
     // default to contractor view
     populateContractorJobs(G.jobs);
