@@ -114,6 +114,14 @@ export async function refreshContractorView() {
     if (!response.ok) return;
     const allJobs = await response.json();
 
+    // Log the entire data set for debugging
+    console.log('All jobs:', allJobs);
+    allJobs.forEach(job => {
+      console.log(
+        `Job ID: ${job.id} | Role: ${job.role} | Assigned Contractor: ${job.assigned_contractor} | Assigned Tech: ${job.assigned_tech}`
+      );
+    });
+
     if (!G.currentUser) {
       // If no user is logged in, no jobs
       G.jobs = [];
