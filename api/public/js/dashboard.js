@@ -91,6 +91,9 @@ export function populateAdminJobs() {
  * Populate Contractor Dashboard.
  */
 export function populateContractorJobs(contractor) {
+  // Log the contractor parameter for debugging
+  console.log("populateContractorJobs parameter contractor:", contractor);
+
   G.contractorJobList.innerHTML = "";
 
   if (!Array.isArray(G.jobs)) {
@@ -98,7 +101,8 @@ export function populateContractorJobs(contractor) {
     return;
   }
 
-  const contractorJobs = G.jobs.filter(job => job.contractor === contractor);
+  // Filter jobs by the assigned_contractor field
+  const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractor);
   if (contractorJobs.length === 0) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
@@ -124,27 +128,29 @@ export function populateContractorJobs(contractor) {
       </td>
     `;
 
+    // Use snake case for work required
     const workOrderCell = row.querySelector("td:first-child");
     workOrderCell.style.cursor = "pointer";
     workOrderCell.addEventListener("click", e => {
       e.stopPropagation();
-      alert(`Work Required: ${job.work_Required}`);
+      alert(`Work Required: ${job.work_required}`);
     });
 
     G.contractorJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
 
-  // Onsite -> moves job to In Progress
+  // Onsite button event handler: moves job to In Progress
   G.contractorJobList.querySelectorAll(".onsite-job").forEach(button =>
     button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
   );
 
-  // Show the extended job update form
+  // Update button event handler: shows the extended job update form
   G.contractorJobList.querySelectorAll(".update-job").forEach(button =>
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
+
 
 /**
  * Populate Tech Dashboard (same structure as Contractor Dashboard).
