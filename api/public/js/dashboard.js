@@ -90,9 +90,9 @@ export function populateAdminJobs() {
 /**
  * Populate Contractor Dashboard.
  */
-export function populateContractorJobs(contractor) {
-  // Log the contractor parameter for debugging
-  console.log("populateContractorJobs parameter contractor:", contractor);
+export function populateContractorJobs(contractorId) {
+  // Log the contractorId parameter for debugging
+  console.log("populateContractorJobs parameter contractorId:", contractorId);
 
   G.contractorJobList.innerHTML = "";
 
@@ -101,8 +101,8 @@ export function populateContractorJobs(contractor) {
     return;
   }
 
-  // Filter jobs by the assigned_contractor field
-  const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractor);
+  // Filter jobs by the assigned_contractor field using the provided contractorId
+  const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractorId);
   if (contractorJobs.length === 0) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
@@ -128,7 +128,6 @@ export function populateContractorJobs(contractor) {
       </td>
     `;
 
-    // Use snake case for work required
     const workOrderCell = row.querySelector("td:first-child");
     workOrderCell.style.cursor = "pointer";
     workOrderCell.addEventListener("click", e => {
@@ -150,6 +149,7 @@ export function populateContractorJobs(contractor) {
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
+
 
 
 /**

@@ -187,7 +187,7 @@ function refreshDashboard() {
   } else if (G.currentUserRole === 'technician') {
     populateTechJobs(G.jobs);
   } else {
-    populateContractorJobs(G.jobs);
+    populateContractorJobs(G.currentUser.id);
   }
   showDashboard(G.currentUserRole);
 }
