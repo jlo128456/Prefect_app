@@ -130,10 +130,19 @@ export async function refreshContractorView() {
       G.jobs = allJobs;
     } else if (G.currentUserRole === 'contractor') {
       // Filter for 'contractor' jobs and check assigned_contractor field
-      G.jobs = allJobs.filter(job =>
-        job.role.toLowerCase() === 'contractor' &&
-        job.assigned_contractor === G.currentUser.id
-      );
+      G.jobs = allJobs.filter(job => {
+        const normalizedRole = job.role.toLowerCase().trim();
+        const normalizedAssigned = job.assigned_contractor ? job.assigned_contractor.trim() : '';
+        const normalizedUserId = G.currentUser.id ? G.currentUser.id.trim() : '';
+        const roleMatch = normalizedRole === 'contractor';
+        const idMatch = normalizedAssigned === normalizedUserId;
+        
+        console.log(
+          `Job ID: ${job.id} | roleMatch: ${roleMatch} | idMatch: ${idMatch} | ` +
+          `job.assigned_contractor: "${normalizedAssigned}" | G.currentUser.id: "${normalizedUserId}"`
+        );
+        return roleMatch && idMatch;
+      });
     } else if (G.currentUserRole === 'technician') {
       // Filter for 'technician' jobs and check assigned_tech field
       G.jobs = allJobs.filter(job =>
