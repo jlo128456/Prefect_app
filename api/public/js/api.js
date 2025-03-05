@@ -132,13 +132,13 @@ export async function refreshContractorView() {
       // Filter for 'contractor' jobs and check assigned_contractor field
       G.jobs = allJobs.filter(job =>
         job.role.toLowerCase() === 'contractor' &&
-        Number(job.assigned_contractor) === Number(G.currentUser.id)
+        job.assigned_contractor === G.currentUser.id
       );
     } else if (G.currentUserRole === 'technician') {
       // Filter for 'technician' jobs and check assigned_tech field
       G.jobs = allJobs.filter(job =>
         job.role.toLowerCase() === 'technician' &&
-        Number(job.assigned_tech) === Number(G.currentUser.id)
+        (job.assigned_tech) === (G.currentUser.id)
       );
     } else {
       // Fallback: if there's some unknown role, no jobs
