@@ -35,9 +35,6 @@ if (process.env.LOCAL_STATIC === 'true') {
   const __dirname = path.dirname(__filename);
 
   app.use(express.static(path.join(__dirname, 'api', 'public')));
-
-
-
   console.log('Serving static files from the public folder (local mode)');
 }
 
@@ -57,11 +54,12 @@ app.get('/jobs', async (req, res) => {
 });
 
 app.post('/jobs', async (req, res) => {
-  const { customerName, contactName, workPerformed, status = 'Pending' } = req.body;
+  // Expect snake_case keys in the request body
+  const { customer_name, contact_name, work_performed, status = 'Pending' } = req.body;
   try {
-    const query = 'INSERT INTO jobs (customerName, contactName, workPerformed, status) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.query(query, [customerName, contactName, workPerformed, status]);
-    res.json({ id: result.insertId, customerName, contactName, workPerformed, status });
+    const query = 'INSERT INTO jobs (customer_name, contact_name, work_performed, status) VALUES (?, ?, ?, ?)';
+    const [result] = await pool.query(query, [customer_name, contact_name, work_performed, status]);
+    res.json({ id: result.insertId, customer_name, contact_name, work_performed, status });
   } catch (error) {
     console.error('Error inserting job:', error);
     res.status(500).json({ error: 'Database insert failed' });
@@ -103,11 +101,12 @@ app.get('/machines', async (req, res) => {
 });
 
 app.post('/machines', async (req, res) => {
-  const { machineType, model, notes, partsUsed } = req.body;
+  // Expect snake_case keys in the request body
+  const { machine_type, model, notes, parts_used } = req.body;
   try {
-    const query = 'INSERT INTO machines (machineType, model, notes, partsUsed) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.query(query, [machineType, model, notes, partsUsed]);
-    res.json({ id: result.insertId, machineType, model, notes, partsUsed });
+    const query = 'INSERT INTO machines (machine_type, model, notes, parts_used) VALUES (?, ?, ?, ?)';
+    const [result] = await pool.query(query, [machine_type, model, notes, parts_used]);
+    res.json({ id: result.insertId, machine_type, model, notes, parts_used });
   } catch (error) {
     console.error('Error inserting machine:', error);
     res.status(500).json({ error: 'Database insert failed' });
