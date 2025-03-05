@@ -5,7 +5,12 @@ const API_BASE_URL =
     : 'https://prefect-app.onrender.com';
 
 import { G } from './globals.js';
-import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
+import {
+  populateAdminJobs,
+  populateContractorJobs,
+  populateTechJobs,
+  showDashboard,
+} from './dashboard.js';
 
 /**
  * Load jobs and users from the API and store them in globals.
@@ -58,7 +63,14 @@ export async function updateJobStatus(jobId) {
         return;
     }
 
-    const updatedJob = { ...job, status: updatedStatus, contractorStatus, statusTimestamp: currentTime };
+    // Updated keys to snake_case
+    const updatedJob = {
+      ...job,
+      status: updatedStatus,
+      contractor_status: contractorStatus,
+      status_timestamp: currentTime,
+    };
+
     const updateResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -109,16 +121,16 @@ export async function refreshContractorView() {
       // Admin sees all jobs
       G.jobs = allJobs;
     } else if (G.currentUserRole === 'contractor') {
-      // Filter for 'contractor' jobs AND check assignedContractor if needed
+      // Filter for 'contractor' jobs and check assigned_contractor field
       G.jobs = allJobs.filter(job =>
-        job.role === 'contractor' &&
-        job.assignedContractor === G.currentUser.id
+        job.role.toLowerCase() === 'contractor' &&
+        Number(job.assigned_contractor) === Number(G.currentUser.id)
       );
     } else if (G.currentUserRole === 'technician') {
-      // Filter for 'technician' jobs AND check assignedTech if needed
+      // Filter for 'technician' jobs and check assigned_tech field
       G.jobs = allJobs.filter(job =>
-        job.role === 'technician' &&
-        job.assignedTech === G.currentUser.id
+        job.role.toLowerCase() === 'technician' &&
+        Number(job.assigned_tech) === Number(G.currentUser.id)
       );
     } else {
       // Fallback: if there's some unknown role, no jobs
@@ -156,10 +168,8 @@ function refreshDashboard() {
   if (G.currentUserRole === 'admin') {
     populateAdminJobs(G.jobs);
   } else if (G.currentUserRole === 'technician') {
-    // Assuming the technician's ID is passed as an argument in populateTechJobs
     populateTechJobs(G.jobs);
   } else {
-    // default to contractor view
     populateContractorJobs(G.jobs);
   }
   showDashboard(G.currentUserRole);
