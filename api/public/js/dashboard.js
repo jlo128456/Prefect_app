@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { formatDateTime, applyStatusColor } from './utils.js';
+import {  applyStatusColor } from './utils.js';
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm } from './jobActions.js';
 
@@ -108,21 +108,16 @@ function formatTime(dateInput) {
  * Populate Contractor Dashboard.
  */
 export function populateContractorJobs(contractorId) {
-  // Ensure the contractorId equals G.currentUser.id
   if (contractorId !== G.currentUser.id) {
-    console.warn(
-      `Parameter contractorId (${contractorId}) does not match G.currentUser.id (${G.currentUser.id}). Overriding parameter with G.currentUser.id.`
-    );
+    console.warn(`Parameter contractorId (${contractorId}) does not match G.currentUser.id (${G.currentUser.id}). Overriding parameter with G.currentUser.id.`);
     contractorId = G.currentUser.id;
   }
-  
-  console.log("populateContractorJobs parameter contractorId:", contractorId);
 
   if (!G.contractorJobList) {
     console.error("G.contractorJobList is not defined or not found in the DOM.");
     return;
   }
-  
+
   G.contractorJobList.innerHTML = "";
 
   if (!Array.isArray(G.jobs)) {
@@ -130,40 +125,24 @@ export function populateContractorJobs(contractorId) {
     return;
   }
 
-  // Log all jobs for debugging
-  G.jobs.forEach(job =>
-    console.log(`Job ID: ${job.id} | assigned_contractor: "${job.assigned_contractor}"`)
-  );
-
-  // Filter jobs by the assigned_contractor field using the enforced contractorId
   const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractorId);
-  console.log("Filtered contractor jobs:", contractorJobs);
-
   if (contractorJobs.length === 0) {
-    G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
+    G.contractorJobList.innerHTML = `<tr><td colspan="6">No jobs found for this contractor.</td></tr>`;
     return;
   }
-  
 
   contractorJobs.forEach(job => {
-
-     // Format the required_date without time
-   const requiredDate = job.required_date
-   ? formatDate(job.required_date)
-   : "N/A";
-
- // Format onsite_time as HH:MM, or show "Not Logged"
- const loggedTime = job.onsite_time
-   ? formatTime(job.onsite_time)
-   : "Not Logged";
+    const requiredDate = job.required_date ? formatDate(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.work_order}</td>
-      <td>${job.customer_name}</td>
+      <td class="work-order" data-id="${job.id}" style="cursor: pointer;">${job.work_order}</td>
+      <td class="customer-name" data-address="${job.customer_address}" style="cursor: pointer;">${job.customer_name}</td>
       <td>${requiredDate}</td>
+      <td>${loggedTime}</td>
       <td class="status-cell">${displayStatus}</td>
-      <td>${loggedTime}</td> 
       <td>
         ${
           job.status === "Pending"
@@ -174,30 +153,49 @@ export function populateContractorJobs(contractorId) {
       </td>
     `;
 
-    const workOrderCell = row.querySelector("td:first-child");
-    workOrderCell.style.cursor = "pointer";
-    workOrderCell.addEventListener("click", e => {
-      e.stopPropagation();
-      alert(`Work Required: ${job.work_required}`);
-    });
-
     G.contractorJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
 
-  // Attach event listeners for the onsite and update buttons
-  G.contractorJobList.querySelectorAll(".onsite-job").forEach(button =>
+  // Event listeners for work order (work required alert)
+  document.querySelectorAll(".work-order").forEach(cell =>
+    cell.addEventListener("click", e => {
+      const jobId = e.target.dataset.id;
+      const job = G.jobs.find(j => j.id === jobId);
+      if (job) {
+        alert(`Work Required: ${job.work_required}`);
+      }
+    })
+  );
+
+  // Event listeners for customer name (display customer address)
+  document.querySelectorAll(".customer-name").forEach(cell =>
+    cell.addEventListener("click", e => {
+      alert(`Customer Address: ${e.target.dataset.address}`);
+    })
+  );
+
+  // Onsite button event handlers
+  document.querySelectorAll(".onsite-job").forEach(button =>
     button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
   );
-  G.contractorJobList.querySelectorAll(".update-job").forEach(button =>
+
+  // Job Completed button event handlers
+  document.querySelectorAll(".update-job").forEach(button =>
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
 
+
 /**
  * Populate Tech Dashboard (same structure as Contractor Dashboard).
  */
-export function populateTechJobs(technician) {
+export function populateTechJobs(techId) {
+  if (!G.techJobList) {
+    console.error("G.techJobList is not defined or not found in the DOM.");
+    return;
+  }
+
   G.techJobList.innerHTML = "";
 
   if (!Array.isArray(G.jobs)) {
@@ -205,35 +203,24 @@ export function populateTechJobs(technician) {
     return;
   }
 
-  // Adjust the filter property if needed (e.g., job.assignedTech instead of job.technician)
-  const techJobs = G.jobs.filter(job => job.technician === technician);
+  const techJobs = G.jobs.filter(job => job.assigned_tech === techId);
   if (techJobs.length === 0) {
     G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
   }
-  
 
   techJobs.forEach(job => {
-// Format the required_date without time
-const requiredDate = job.required_date
-? formatDate(job.required_date)
-: "N/A";
-
-// Format onsite_time as HH:MM, or show "Not Logged"
-const loggedTime = job.onsite_time
-? formatTime(job.onsite_time)
-: "Not Logged";
-
+    const requiredDate = job.required_date ? formatDate(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.work_order}</td>
-      <td>${job.customer_name}</td>
-      <td>${job.contractor_name || 'N/A'}</td>
+      <td class="work-order" data-id="${job.id}" style="cursor: pointer;">${job.work_order}</td>
+      <td class="customer-name" data-address="${job.customer_address}" style="cursor: pointer;">${job.customer_name}</td>
       <td>${requiredDate}</td>
-      <td class="status-cell">${displayStatus}</td>
       <td>${loggedTime}</td>
+      <td class="status-cell">${displayStatus}</td>
       <td>
         ${
           job.status === "Pending"
@@ -244,25 +231,35 @@ const loggedTime = job.onsite_time
       </td>
     `;
 
-    // Allow clicking on the work order cell to view work required details
-    const workOrderCell = row.querySelector("td:first-child");
-    workOrderCell.style.cursor = "pointer";
-    workOrderCell.addEventListener("click", e => {
-      e.stopPropagation();
-      alert(`Work Required: ${job.work_required}`);
-    });
-
     G.techJobList.appendChild(row);
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
 
-  // Add event listeners for "Onsite" buttons to move the job to In Progress
-  G.techJobList.querySelectorAll(".onsite-job").forEach(button =>
+  // Event listeners for work order (work required alert)
+  document.querySelectorAll(".work-order").forEach(cell =>
+    cell.addEventListener("click", e => {
+      const jobId = e.target.dataset.id;
+      const job = G.jobs.find(j => j.id === jobId);
+      if (job) {
+        alert(`Work Required: ${job.work_required}`);
+      }
+    })
+  );
+
+  // Event listeners for customer name (display customer address)
+  document.querySelectorAll(".customer-name").forEach(cell =>
+    cell.addEventListener("click", e => {
+      alert(`Customer Address: ${e.target.dataset.address}`);
+    })
+  );
+
+  // Onsite button event handlers
+  document.querySelectorAll(".onsite-job").forEach(button =>
     button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
   );
 
-  // Add event listeners for "Job Completed" buttons to show the extended update form
-  G.techJobList.querySelectorAll(".update-job").forEach(button =>
+  // Job Completed button event handlers
+  document.querySelectorAll(".update-job").forEach(button =>
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
