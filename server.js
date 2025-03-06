@@ -57,9 +57,13 @@ app.get('/jobs/:id', async (req, res) => {
   const jobId = req.params.id;
   try {
     const [rows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+    
     if (rows.length === 0) {
+      // If no job is found, return 404
       return res.status(404).json({ error: 'Job not found' });
     }
+    
+    // If the job exists, send the first (and only) row
     res.json(rows[0]);
   } catch (error) {
     console.error('Error retrieving job:', error);

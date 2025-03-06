@@ -9,10 +9,10 @@ const API_BASE_URL = 'https://prefect-app.onrender.com';
  * Move job from Pending -> In Progress -> Completed - Pending Approval.
  * All references now in snake_case.
  */
-export async function moveJobToInProgress(jobId) {
+export async function moveJobToInProgress(id) {
   try {
     // Fetch the specific job from your API
-    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
     if (!jobResponse.ok) {
       console.error('Job not found.');
       return;
