@@ -53,6 +53,20 @@ app.get('/jobs', async (req, res) => {
   }
 });
 
+app.get('/jobs/:id', async (req, res) => {
+  const jobId = req.params.id;
+  try {
+    const [rows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error retrieving job:', error);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
 app.post('/jobs', async (req, res) => {
   // Expect snake_case keys in the request body
   const { customer_name, contact_name, work_performed, status = 'Pending' } = req.body;
