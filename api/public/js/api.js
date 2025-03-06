@@ -169,10 +169,10 @@ export async function refreshContractorView() {
 /**
  * Delete a job and refresh the UI.
  */
-export async function deleteJob(jobId) {
+export async function deleteJob(id) {
   if (!confirm('Are you sure you want to delete this job?')) return;
   try {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, { method: 'DELETE' });
+    const response = await fetch(`${API_BASE_URL}/jobs/${id}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to delete job.');
     alert('Job deleted successfully.');
     await loadData();

@@ -86,6 +86,23 @@ export function populateAdminJobs() {
     button.addEventListener("click", e => updateJobStatus(e.target.dataset.id, "Pending"))
   );
 }
+function formatDate(dateInput) {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// Helper to format a Date or date string as HH:MM (24-hour clock)
+function formatTime(dateInput) {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 /**
  * Populate Contractor Dashboard.
@@ -126,6 +143,15 @@ export function populateContractorJobs(contractorId) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
   }
+   // Format the required_date without time
+   const requiredDate = job.required_date
+   ? formatDate(job.required_date)
+   : "N/A";
+
+ // Format onsite_time as HH:MM, or show "Not Logged"
+ const loggedTime = job.onsite_time
+   ? formatTime(job.onsite_time)
+   : "Not Logged";
 
   contractorJobs.forEach(job => {
     const displayStatus = job.contractor_status || job.status;
@@ -133,9 +159,9 @@ export function populateContractorJobs(contractorId) {
     row.innerHTML = `
       <td>${job.work_order}</td>
       <td>${job.customer_name}</td>
-      <td>${job.required_date}</td>
-      <td>${job.onsite_time ? job.onsite_time : "Not Logged"}</td>
+      <td>${requiredDate}</td>
       <td class="status-cell">${displayStatus}</td>
+      <td>${loggedTime}</td> 
       <td>
         ${
           job.status === "Pending"
@@ -188,6 +214,15 @@ export function populateTechJobs(technician) {
     G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
   }
+  // Format the required_date without time
+  const requiredDate = job.required_date
+  ? formatDate(job.required_date)
+  : "N/A";
+
+// Format onsite_time as HH:MM, or show "Not Logged"
+const loggedTime = job.onsite_time
+  ? formatTime(job.onsite_time)
+  : "Not Logged";
 
   techJobs.forEach(job => {
     const displayStatus = job.contractor_status || job.status;
@@ -197,9 +232,9 @@ export function populateTechJobs(technician) {
       <td>${job.work_order}</td>
       <td>${job.customer_name}</td>
       <td>${job.contractor_name || 'N/A'}</td>
-      <td>${job.required_date}</td>
-      <td>${job.onsite_time ? job.onsite_time : "Not Logged"}</td>
+      <td>${requiredDate}</td>
       <td class="status-cell">${displayStatus}</td>
+      <td>${loggedTime}</td>
       <td>
         ${
           job.status === "Pending"
