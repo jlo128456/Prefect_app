@@ -55,16 +55,16 @@ export function showDashboard(role) {
  * Populate Admin Dashboard (table of jobs) + handle "Add Job" form submissions.
  */
 export async function populateAdminJobs() {
-  // 1) Clear the admin job list on each call
+  // Clear the admin job list on each call
   G.adminJobList.innerHTML = "";
 
-  // 2) Validate G.jobs
+  // Validate G.jobs
   if (!Array.isArray(G.jobs)) {
     console.error("G.jobs is not an array. Current value:", G.jobs);
     return;
   }
 
-  // 3) Attach "Add Job" form submit event (only once)
+  // Attach "Add Job" form submit event (only once)
   const addJobForm = document.getElementById("admin-add-job-form");
   if (addJobForm && !addJobForm.dataset.listenerAttached) {
     addJobForm.addEventListener("submit", async (e) => {
@@ -85,7 +85,7 @@ export async function populateAdminJobs() {
       };
 
       try {
-        // 4) Use the dynamic base URL here
+        // Use the dynamic base URL here
         const response = await fetch(`${API_BASE_URL}/api/jobs`, {
           method: "POST",
           headers: {
@@ -104,6 +104,12 @@ export async function populateAdminJobs() {
         // 6) Push it into G.jobs so the table updates without a full refresh
         G.jobs.push(createdJob);
 
+        // Close the modal after successful creation
+        const modalEl = document.getElementById("adminAddJobModal");
+        // Get the existing modal instance if available; otherwise, create one
+        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modalInstance.hide();
+
         // Re-populate the table
         populateAdminJobs();
 
@@ -117,7 +123,7 @@ export async function populateAdminJobs() {
     addJobForm.dataset.listenerAttached = "true";
   }
 
-  // 7) Render the existing jobs
+  //  Render the existing jobs
   G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
