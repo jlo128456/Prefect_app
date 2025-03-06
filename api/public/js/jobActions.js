@@ -13,11 +13,11 @@ async function moveJobToInProgress(id) {
   console.log(`Moving Job ID: ${id} to "In Progress"...`);
 
   try {
-    // Fetch job details before updating
-    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
-    if (!jobResponse.ok) throw new Error("Failed to fetch job data.");
+    const response = await fetch(`${API_BASE_URL}/jobs/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch job data.");
 
-    const job = await jobResponse.json();
+    const job = await response.json();
+    console.log("Current job details:", job);
 
     // Generate timestamp in MySQL-compatible format (YYYY-MM-DD HH:MM:SS)
     const currentTime = new Date();
@@ -41,7 +41,7 @@ async function moveJobToInProgress(id) {
     // Set `onsite_time` only if it was not previously set
     const onsiteTime = !job.onsite_time || job.onsite_time === "N/A" ? formattedTime : job.onsite_time;
 
-    // Update job object (ensuring snake_case field names)
+    // Prepare the updated job object
     const updatedJob = {
       ...job,
       status: updatedStatus,
@@ -49,6 +49,8 @@ async function moveJobToInProgress(id) {
       status_timestamp: formattedTime,
       onsite_time: onsiteTime,
     };
+
+    console.log("Updating job with new details:", updatedJob);
 
     // Send the updated job data to the API
     const putResponse = await fetch(`${API_BASE_URL}/jobs/${id}`, {
