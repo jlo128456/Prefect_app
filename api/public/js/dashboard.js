@@ -91,8 +91,13 @@ export function populateAdminJobs() {
  * Populate Contractor Dashboard.
  */
 export function populateContractorJobs(contractorId) {
-  // Log the contractorId parameter for debugging
   console.log("populateContractorJobs parameter contractorId:", contractorId);
+
+  // Ensure the container exists
+  if (!G.contractorJobList) {
+    console.error("G.contractorJobList is not defined or not found in the DOM.");
+    return;
+  }
 
   G.contractorJobList.innerHTML = "";
 
@@ -101,8 +106,15 @@ export function populateContractorJobs(contractorId) {
     return;
   }
 
+  // Log all jobs to verify their assigned_contractor values
+  G.jobs.forEach(job =>
+    console.log(`Job ID: ${job.id} | assigned_contractor: "${job.assigned_contractor}"`)
+  );
+
   // Filter jobs by the assigned_contractor field using the provided contractorId
   const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractorId);
+  console.log("Filtered contractor jobs:", contractorJobs);
+
   if (contractorJobs.length === 0) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
@@ -128,6 +140,7 @@ export function populateContractorJobs(contractorId) {
       </td>
     `;
 
+    // Correct snake case for work required field
     const workOrderCell = row.querySelector("td:first-child");
     workOrderCell.style.cursor = "pointer";
     workOrderCell.addEventListener("click", e => {
@@ -149,6 +162,7 @@ export function populateContractorJobs(contractorId) {
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
+
 
 
 
