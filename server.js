@@ -83,6 +83,30 @@ app.post('/jobs', async (req, res) => {
     res.status(500).json({ error: 'Database insert failed' });
   }
 });
+app.put('/jobs/:id', async (req, res) => {
+  const { id } = req.params; // Extract ID from URL
+  const { status, contractor_status, onsite_time, status_timestamp } = req.body;
+
+  try {
+    // Ensure job exists before updating
+    const [existingJob] = await pool.query("SELECT * FROM jobs WHERE id = ?", [id]);
+    if (existingJob.length === 0) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Update job
+    const query = `
+      UPDATE jobs 
+      SET status = ?, contractor_status = ?, onsite_time = ?, status_timestamp = ? 
+      WHERE id = ?`;
+    const [result] = await pool.query(query, [status, contractor_status, onsite_time, status_timestamp, id]);
+
+    res.json({ success: true, message: "Job updated successfully" });
+  } catch (error) {
+    console.error("Error updating job:", error);
+    res.status(500).json({ error: "Database update failed" });
+  }
+});
 
 // USERS ENDPOINTS
 app.get('/users', async (req, res) => {
