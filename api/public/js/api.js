@@ -37,9 +37,9 @@ export async function loadData() {
  * Update a job's status and refresh the UI.
  * @param {number} jobId - The job ID.
  */
-export async function updateJobStatus(jobId) {
+export async function updateJobStatus(id) {
   try {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    const response = await fetch(`${API_BASE_URL}/jobs/${id}`);
     if (!response.ok) throw new Error('Failed to fetch job');
     const job = await response.json();
     if (!job) return;
@@ -63,20 +63,25 @@ export async function updateJobStatus(jobId) {
         return;
     }
 
-    // Updated keys to snake_case
-    const updatedJob = {
-      ...job,
-      status: updatedStatus,
-      contractor_status: contractorStatus,
-      status_timestamp: currentTime,
+    // Ensure we're using snake_case keys for backend compatibility
+    const updatedJob = { 
+      ...job, 
+      status: updatedStatus, 
+      contractor_status: contractorStatus, 
+      status_timestamp: currentTime 
     };
 
-    const updateResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    console.log("Updated job payload:", updatedJob);
+
+    const updateResponse = await fetch(`${API_BASE_URL}/jobs/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedJob),
     });
-    if (!updateResponse.ok) throw new Error('Failed to update job status.');
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      throw new Error(`Failed to update job status: ${errorText}`);
+    }
 
     console.log(statusMessage);
     alert(statusMessage);
