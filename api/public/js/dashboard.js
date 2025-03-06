@@ -136,10 +136,18 @@ export function populateContractorJobs(contractorId) {
     const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
+     // Create Google Maps URL
+     const encodedAddress = encodeURIComponent(job.customer_address);
+     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td class="work-order" data-id="${job.id}" style="cursor: pointer;">${job.work_order}</td>
-      <td class="customer-name" data-address="${job.customer_address}" style="cursor: pointer;">${job.customer_name}</td>
+      <td>
+        <a href="${mapsUrl}" target="_blank" class="customer-name" data-address="${job.customer_address}" style="cursor: pointer; text-decoration: underline;">
+          ${job.customer_name}
+        </a>
+      </td>
       <td>${requiredDate}</td>
       <td>${loggedTime}</td>
       <td class="status-cell">${displayStatus}</td>
@@ -214,10 +222,19 @@ export function populateTechJobs(techId) {
     const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
+      // Create Google Maps URL
+      const encodedAddress = encodeURIComponent(job.customer_address);
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td class="work-order" data-id="${job.id}" style="cursor: pointer;">${job.work_order}</td>
-      <td class="customer-name" data-address="${job.customer_address}" style="cursor: pointer;">${job.customer_name}</td>
+      <td>
+        <a href="${mapsUrl}" target="_blank" class="customer-name" data-address="${job.customer_address}" style="cursor: pointer; text-decoration: underline;">
+          ${job.customer_name}
+        </a>
+      </td>
       <td>${requiredDate}</td>
       <td>${loggedTime}</td>
       <td class="status-cell">${displayStatus}</td>
