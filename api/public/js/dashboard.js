@@ -149,8 +149,8 @@ export function populateContractorJobs(contractorId) {
         </a>
       </td>
       <td>${requiredDate}</td>
-      <td>${loggedTime}</td>
       <td class="status-cell">${displayStatus}</td>
+      <td>${loggedTime}</td>
       <td>
         ${
           job.status === "Pending"
@@ -236,8 +236,8 @@ export function populateTechJobs(techId) {
         </a>
       </td>
       <td>${requiredDate}</td>
-      <td>${loggedTime}</td>
       <td class="status-cell">${displayStatus}</td>
+      <td>${loggedTime}</td> 
       <td>
         ${
           job.status === "Pending"

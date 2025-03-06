@@ -9,44 +9,39 @@ const API_BASE_URL = 'https://prefect-app.onrender.com';
  * Move job from Pending -> In Progress -> Completed - Pending Approval.
  * All references now in snake_case.
  */
-export async function moveJobToInProgress(id) {
+async function moveJobToInProgress(id) {
+  console.log(`Moving Job ID: ${id} to "In Progress"...`);
+
   try {
-    // Fetch the specific job from your API
+    // Fetch job details before updating
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
-    if (!jobResponse.ok) {
-      console.error('Job not found.');
-      return;
-    }
+    if (!jobResponse.ok) throw new Error("Failed to fetch job data.");
 
     const job = await jobResponse.json();
 
-    // Generate timestamp in DD/MM/YYYY HH:MM:SS format.
+    // Generate timestamp in MySQL-compatible format (YYYY-MM-DD HH:MM:SS)
     const currentTime = new Date();
-    const formattedTime = `${String(currentTime.getDate()).padStart(2, '0')}/${
-      String(currentTime.getMonth() + 1).padStart(2, '0')}/${currentTime.getFullYear()} ${
-      String(currentTime.getHours()).padStart(2, '0')}:${
-      String(currentTime.getMinutes()).padStart(2, '0')}:${
-      String(currentTime.getSeconds()).padStart(2, '0')}`;
+    const formattedTime = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')} ${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}:${String(currentTime.getSeconds()).padStart(2, '0')}`;
 
     let updatedStatus, contractorStatus, statusMessage;
 
-    if (job.status === 'Pending') {
-      updatedStatus = 'In Progress';
-      contractorStatus = 'In Progress';
+    if (job.status === "Pending") {
+      updatedStatus = "In Progress";
+      contractorStatus = "In Progress";
       statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
-    } else if (job.status === 'In Progress') {
-      updatedStatus = 'Completed - Pending Approval';
-      contractorStatus = 'Completed';
+    } else if (job.status === "In Progress") {
+      updatedStatus = "Completed - Pending Approval";
+      contractorStatus = "Completed";
       statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
     } else {
-      console.error('Invalid action: The job is already completed or approved.');
+      console.error("Invalid action: The job is already completed or approved.");
       return;
     }
 
-    // Determine onsite_time value
-    const onsiteTime = !job.onsite_time || job.onsite_time === 'N/A' ? formattedTime : job.onsite_time;
+    // Set `onsite_time` only if it was not previously set
+    const onsiteTime = !job.onsite_time || job.onsite_time === "N/A" ? formattedTime : job.onsite_time;
 
-    // Merge updated fields with existing job (snake_case)
+    // Update job object (ensuring snake_case field names)
     const updatedJob = {
       ...job,
       status: updatedStatus,
@@ -55,27 +50,32 @@ export async function moveJobToInProgress(id) {
       onsite_time: onsiteTime,
     };
 
-    // Send a PUT request to update the job via your API
+    // Send the updated job data to the API
     const putResponse = await fetch(`${API_BASE_URL}/jobs/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedJob),
     });
+
     if (!putResponse.ok) {
-      throw new Error('Failed to update job status.');
+      throw new Error("Failed to update job status.");
     }
 
+    console.log(`Job ${id} updated successfully.`);
     alert(statusMessage);
-    // Reload global data and refresh views.
+
+    // Refresh UI
     await loadData();
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.currentUser.id);
-    populateTechJobs(G.currentUser.id)
+    populateTechJobs(G.currentUser.id);
+
   } catch (error) {
-    console.error('Error updating job status:', error);
-    alert('Failed to update job status.');
+    console.error("Error updating job status:", error);
+    alert("Failed to update job status.");
   }
 }
+
 
 /**
  * Show extended job update form (with signature, machine selection, etc.).
