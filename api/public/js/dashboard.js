@@ -1,5 +1,6 @@
 import { G } from './globals.js';
 import { formatForDisplay, applyStatusColor } from './utils.js';
+import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm } from './jobActions.js';
 
@@ -51,39 +52,102 @@ export function showDashboard(role) {
 }
 
 /**
- * Populate Admin Dashboard (table of jobs).
+ * Populate Admin Dashboard (table of jobs) + handle "Add Job" form submissions.
  */
-export function populateAdminJobs() {
+export async function populateAdminJobs() {
+  // 1) Clear the admin job list on each call
   G.adminJobList.innerHTML = "";
 
+  // 2) Validate G.jobs
   if (!Array.isArray(G.jobs)) {
     console.error("G.jobs is not an array. Current value:", G.jobs);
     return;
   }
 
-  G.jobs.forEach(job => {
-    console.log("Job Data:", job);
-    console.log("Work Order:", job.work_order);
+  // 3) Attach "Add Job" form submit event (only once)
+  const addJobForm = document.getElementById("admin-add-job-form");
+  if (addJobForm && !addJobForm.dataset.listenerAttached) {
+    addJobForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
+      const workOrder = document.getElementById("work_order").value.trim();
+      const customerName = document.getElementById("customer_name").value.trim();
+      const contractor = document.getElementById("contractor").value.trim();
+      const role = document.getElementById("role").value;
+
+      // Build the job data to send to the server
+      const newJob = {
+        work_order: workOrder,
+        customer_name: customerName,
+        contractor,
+        role,
+        status: "Pending",
+      };
+
+      try {
+        // 4) Use the dynamic base URL here
+        const response = await fetch(`${API_BASE_URL}/api/jobs`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newJob),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to create job. Status: ${response.status}`);
+        }
+
+        // 5) Receive the newly created job (with its assigned ID from MySQL)
+        const createdJob = await response.json();
+
+        // 6) Push it into G.jobs so the table updates without a full refresh
+        G.jobs.push(createdJob);
+
+        // Re-populate the table
+        populateAdminJobs();
+
+      } catch (err) {
+        console.error("Error creating job:", err);
+        alert("Failed to create job. Check console for details.");
+      }
+    });
+
+    // Mark that we’ve attached this listener so we don’t attach it again
+    addJobForm.dataset.listenerAttached = "true";
+  }
+
+  // 7) Render the existing jobs
+  G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.work_order ? job.work_order : 'N/A'}</td>
-      <td>${job.customer_name ? job.customer_name : 'N/A'}</td>
-      <td>${job.contractor ? job.contractor : 'N/A'}</td>
-      <td>${job.role ? job.role : 'N/A'}</td>      <!-- Display 'role' here -->
-      <td class="status-cell">${job.status ? job.status : 'N/A'}</td>
+      <td>${job.work_order || "N/A"}</td>
+      <td>${job.customer_name || "N/A"}</td>
+      <td>${job.contractor || "N/A"}</td>
+      <td>${job.role || "N/A"}</td>
+      <td class="status-cell">${job.status || "N/A"}</td>
+      <td>${job.last_updated || ""}</td>
+      <td>
+        <button class="approve-job" data-id="${job.id}">Approve</button>
+        <button class="reject-job" data-id="${job.id}">Reject</button>
+      </td>
     `;
-
     G.adminJobList.appendChild(row);
+
+    // Apply color styling if you have a custom function
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
 
-  // Approve/Reject event listeners
-  document.querySelectorAll(".approve-job").forEach(button =>
-    button.addEventListener("click", e => updateJobStatus(e.target.dataset.id, "Approved"))
+  // 8) Optional: Attach Approve/Reject event listeners, using your API calls
+  document.querySelectorAll(".approve-job").forEach((button) =>
+    button.addEventListener("click", (e) =>
+      updateJobStatus(e.target.dataset.id, "Approved")
+    )
   );
-  document.querySelectorAll(".reject-job").forEach(button =>
-    button.addEventListener("click", e => updateJobStatus(e.target.dataset.id, "Pending"))
+  document.querySelectorAll(".reject-job").forEach((button) =>
+    button.addEventListener("click", (e) =>
+      updateJobStatus(e.target.dataset.id, "Pending")
+    )
   );
 }
 /**

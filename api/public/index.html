@@ -20,7 +20,7 @@
   <header>
     <h1>Job Management System</h1>
     <p>Log in to manage or track job statuses.</p>
-    <div id="formContainer"></div> <!-- Use this to display the form -->
+    <div id="formContainer"></div> <!-- Use this to display the form if needed -->
   </header>
 
   <!-- Main Content -->
@@ -42,13 +42,40 @@
     <div id="adminView" class="d-none">
       <h2>Administrator Dashboard</h2>
       <p>Monitor all job statuses and contractor performance.</p>
+
+      <!-- "Add Job" Form for Admin -->
+      <form id="admin-add-job-form">
+        <h3>Add a New Job</h3>
+        
+        <label for="work_order">Work Order:</label>
+        <input type="text" id="work_order" name="work_order" required>
+
+        <label for="customer_name">Customer Name:</label>
+        <input type="text" id="customer_name" name="customer_name" required>
+
+        <label for="contractor">Contractor/Tech Name:</label>
+        <input type="text" id="contractor" name="contractor" required>
+
+        <label for="role">Role:</label>
+        <select id="role" name="role" required>
+          <option value="">Select a Role</option>
+          <option value="Contractor">Contractor</option>
+          <option value="Technician">Technician</option>
+          <option value="Manager">Manager</option>
+        </select>
+
+        <button type="submit">Add Job</button>
+      </form>
+      <!-- End "Add Job" Form -->
+
+      <!-- Existing Admin Jobs Table -->
       <table>
         <thead>
           <tr>
             <th>Work Order</th>
             <th>Customer Name</th>
             <th>Contractor</th>
-            <th>Role</th> <!-- NEW COLUMN -->
+            <th>Role</th>
             <th>Status</th>
             <th>Last Updated</th>
             <th>Actions</th>
@@ -95,7 +122,6 @@
         <tbody id="techJobList"></tbody>
       </table>
     </div>
-
   </main>
 
   <!-- Footer Section -->

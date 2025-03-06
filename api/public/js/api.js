@@ -1,8 +1,9 @@
 // Dynamically set API_BASE_URL based on the environment
-const API_BASE_URL =
+export const API_BASE_URL =
   window.location.hostname === 'localhost'
-    ? 'http://localhost:3000' // Change this to your local API URL if different
-    : 'https://prefect-app.onrender.com';
+    ? 'http://localhost:3000' // Your local dev server
+    : 'https://prefect-app.onrender.com'; // Production server
+
 
 import { G } from './globals.js';
 import {
