@@ -91,14 +91,21 @@ export function populateAdminJobs() {
  * Populate Contractor Dashboard.
  */
 export function populateContractorJobs(contractorId) {
+  // Ensure the contractorId equals G.currentUser.id
+  if (contractorId !== G.currentUser.id) {
+    console.warn(
+      `Parameter contractorId (${contractorId}) does not match G.currentUser.id (${G.currentUser.id}). Overriding parameter with G.currentUser.id.`
+    );
+    contractorId = G.currentUser.id;
+  }
+  
   console.log("populateContractorJobs parameter contractorId:", contractorId);
 
-  // Ensure the container exists
   if (!G.contractorJobList) {
     console.error("G.contractorJobList is not defined or not found in the DOM.");
     return;
   }
-
+  
   G.contractorJobList.innerHTML = "";
 
   if (!Array.isArray(G.jobs)) {
@@ -106,12 +113,12 @@ export function populateContractorJobs(contractorId) {
     return;
   }
 
-  // Log all jobs to verify their assigned_contractor values
+  // Log all jobs for debugging
   G.jobs.forEach(job =>
     console.log(`Job ID: ${job.id} | assigned_contractor: "${job.assigned_contractor}"`)
   );
 
-  // Filter jobs by the assigned_contractor field using the provided contractorId
+  // Filter jobs by the assigned_contractor field using the enforced contractorId
   const contractorJobs = G.jobs.filter(job => job.assigned_contractor === contractorId);
   console.log("Filtered contractor jobs:", contractorJobs);
 
@@ -122,7 +129,6 @@ export function populateContractorJobs(contractorId) {
 
   contractorJobs.forEach(job => {
     const displayStatus = job.contractor_status || job.status;
-
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${job.work_order}</td>
@@ -140,7 +146,6 @@ export function populateContractorJobs(contractorId) {
       </td>
     `;
 
-    // Correct snake case for work required field
     const workOrderCell = row.querySelector("td:first-child");
     workOrderCell.style.cursor = "pointer";
     workOrderCell.addEventListener("click", e => {
@@ -152,16 +157,15 @@ export function populateContractorJobs(contractorId) {
     applyStatusColor(row.querySelector(".status-cell"), displayStatus);
   });
 
-  // Onsite button event handler: moves job to In Progress
+  // Attach event listeners for the onsite and update buttons
   G.contractorJobList.querySelectorAll(".onsite-job").forEach(button =>
     button.addEventListener("click", e => moveJobToInProgress(e.target.dataset.id))
   );
-
-  // Update button event handler: shows the extended job update form
   G.contractorJobList.querySelectorAll(".update-job").forEach(button =>
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
+
 
 
 
