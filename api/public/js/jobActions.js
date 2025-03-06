@@ -1,6 +1,6 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
-
+import { loadData } from './api.js';
 
 // Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
@@ -62,7 +62,7 @@ export async function moveJobToInProgress(id) {
       status: updatedStatus,
       contractor_status: contractorStatus,
       status_timestamp: formattedTime,
-      onsite_time: job.onsite_time ? job.onsite_time : formattedTime, // Set only if not already set
+      onsite_time: onsiteTime // Set only if not already set
     };
 
     console.log("Updating job with new details:", updatedJob);
