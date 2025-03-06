@@ -19,20 +19,35 @@ export async function moveJobToInProgress(id) {
     const job = await response.json();
     console.log("Current job details:", job);
 
-    // Generate timestamp in MySQL-compatible format (YYYY-MM-DD HH:MM:SS)
-    const currentTime = new Date();
-    const formattedTime = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')} ${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}:${String(currentTime.getSeconds()).padStart(2, '0')}`;
+    // Function to format timestamps for MySQL (YYYY-MM-DD HH:MM:SS)
+    function formatForMySQL(dateInput) {
+      if (!dateInput) return null; // Ensure NULL values are handled
+
+      const date = new Date(dateInput);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    }
+
+    // Function to format timestamps for UI (DD-MM-YYYY HH:MM:SS)
+    function formatForDisplay(dateInput) {
+      if (!dateInput) return "Not Logged"; // Handle NULL values
+
+      const date = new Date(dateInput);
+      return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    }
+
+    // Generate formatted timestamp
+    const formattedTime = formatForMySQL(new Date());
 
     let updatedStatus, contractorStatus, statusMessage;
 
     if (job.status === "Pending") {
       updatedStatus = "In Progress";
       contractorStatus = "In Progress";
-      statusMessage = `Job moved to 'In Progress' at ${formattedTime}.`;
+      statusMessage = `Job moved to 'In Progress' at ${formatForDisplay(formattedTime)}.`;
     } else if (job.status === "In Progress") {
       updatedStatus = "Completed - Pending Approval";
       contractorStatus = "Completed";
-      statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formattedTime}.`;
+      statusMessage = `Job completed and moved to 'Completed - Pending Approval' at ${formatForDisplay(formattedTime)}.`;
     } else {
       console.error("Invalid action: The job is already completed or approved.");
       return;
@@ -47,7 +62,7 @@ export async function moveJobToInProgress(id) {
       status: updatedStatus,
       contractor_status: contractorStatus,
       status_timestamp: formattedTime,
-      onsite_time: onsiteTime,
+      onsite_time: job.onsite_time ? job.onsite_time : formattedTime, // Set only if not already set
     };
 
     console.log("Updating job with new details:", updatedJob);
@@ -71,12 +86,12 @@ export async function moveJobToInProgress(id) {
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
-
   } catch (error) {
     console.error("Error updating job status:", error);
     alert("Failed to update job status.");
   }
 }
+
 
 
 /**

@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import {  applyStatusColor } from './utils.js';
+import { formatForDisplay, applyStatusColor } from './utils.js';
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm } from './jobActions.js';
 
@@ -86,24 +86,6 @@ export function populateAdminJobs() {
     button.addEventListener("click", e => updateJobStatus(e.target.dataset.id, "Pending"))
   );
 }
-function formatDate(dateInput) {
-  if (!dateInput) return "";
-  const date = new Date(dateInput);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
-
-// Helper to format a Date or date string as HH:MM (24-hour clock)
-function formatTime(dateInput) {
-  if (!dateInput) return "";
-  const date = new Date(dateInput);
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
-
 /**
  * Populate Contractor Dashboard.
  */
@@ -132,13 +114,21 @@ export function populateContractorJobs(contractorId) {
   }
 
   contractorJobs.forEach(job => {
-    const requiredDate = job.required_date ? formatDate(job.required_date) : "N/A";
-    const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
+    const requiredDate = job.required_date ? formatForDisplay(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatForDisplay(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
      // Create Google Maps URL
      const encodedAddress = encodeURIComponent(job.customer_address);
      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+
+     function formatForMySQL(dateInput) {
+      if (!dateInput) return null; // Ensure NULL values are handled
+    
+      const date = new Date(dateInput);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    }
+    
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -218,8 +208,8 @@ export function populateTechJobs(techId) {
   }
 
   techJobs.forEach(job => {
-    const requiredDate = job.required_date ? formatDate(job.required_date) : "N/A";
-    const loggedTime = job.onsite_time ? formatTime(job.onsite_time) : "Not Logged";
+    const requiredDate = job.required_date ? formatForDisplay(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatForDisplay(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
       // Create Google Maps URL
