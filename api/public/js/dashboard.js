@@ -30,26 +30,26 @@ export function showDashboard(role) {
 
   } else if (role === "contractor") {
     G.contractorView.style.display = "block";
-    const contractor = G.users.find(u => u.role === "contractor")?.username;
-    populateContractorJobs(contractor);
+    // We use the current user's id directly instead of contractor username.
+    populateContractorJobs(G.currentUser.id);
 
     G.pollingInterval = setInterval(async () => {
       await refreshContractorView();
-      populateContractorJobs(contractor);
+      populateContractorJobs(G.currentUser.id);
     }, 5000);
 
   } else if (role === "technician") {
     // Show Tech view
     G.techView.style.display = "block";
-    const technician = G.users.find(u => u.role === "technician")?.username;
-    populateTechJobs(technician);
+    populateTechJobs(G.currentUser.id);
 
     G.pollingInterval = setInterval(async () => {
       await refreshContractorView();
-      populateTechJobs(technician);
+      populateTechJobs(G.currentUser.id);
     }, 5000);
   }
 }
+
 /**
  * Populate Admin Dashboard (table of jobs).
  */
@@ -193,11 +193,6 @@ export function populateContractorJobs(contractorId) {
     button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
   );
 }
-
-
-
-
-
 
 /**
  * Populate Tech Dashboard (same structure as Contractor Dashboard).

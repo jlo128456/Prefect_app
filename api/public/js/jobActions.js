@@ -56,7 +56,7 @@ export async function moveJobToInProgress(id) {
     };
 
     // Send a PUT request to update the job via your API
-    const putResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    const putResponse = await fetch(`${API_BASE_URL}/jobs/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedJob),
@@ -69,8 +69,8 @@ export async function moveJobToInProgress(id) {
     // Reload global data and refresh views.
     await loadData();
     populateAdminJobs(G.jobs);
-    populateContractorJobs(G.jobs);
-    populateTechJobs(G.jobs)
+    populateContractorJobs(G.currentUser.id);
+    populateTechJobs(G.currentUser.id)
   } catch (error) {
     console.error('Error updating job status:', error);
     alert('Failed to update job status.');
@@ -230,22 +230,7 @@ export async function showUpdateJobForm(jobId) {
     const updateFormContainer = document.createElement('div');
     updateFormContainer.innerHTML = formHTML;
     document.body.appendChild(updateFormContainer);
-
-    // --- The second overlay creation is commented out to avoid redeclaration ---
-    // // Create overlay.
-    // const modalOverlay = document.createElement('div');
-    // modalOverlay.id = 'modalOverlay';
-    // Object.assign(modalOverlay.style, {
-    //   position: 'fixed',
-    //   top: '0',
-    //   left: '0',
-    //   width: '100%',
-    //   height: '100%',
-    //   background: 'rgba(0, 0, 0, 0.5)',
-    //   zIndex: '999',
-    // });
-    // document.body.appendChild(modalOverlay);
-
+    
     // --- Signature Pad Setup ---
     const signatureCanvas = document.getElementById('signatureCanvas');
     const ctx = signatureCanvas.getContext('2d');
