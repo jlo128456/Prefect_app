@@ -9,7 +9,7 @@ const API_BASE_URL = 'https://prefect-app.onrender.com';
  * Move job from Pending -> In Progress -> Completed - Pending Approval.
  * All references now in snake_case.
  */
-async function moveJobToInProgress(id) {
+export async function moveJobToInProgress(id) {
   console.log(`Moving Job ID: ${id} to "In Progress"...`);
 
   try {
