@@ -143,7 +143,11 @@ export function populateContractorJobs(contractorId) {
     G.contractorJobList.innerHTML = `<tr><td colspan="4">No jobs found for this contractor.</td></tr>`;
     return;
   }
-   // Format the required_date without time
+  
+
+  contractorJobs.forEach(job => {
+
+     // Format the required_date without time
    const requiredDate = job.required_date
    ? formatDate(job.required_date)
    : "N/A";
@@ -152,8 +156,6 @@ export function populateContractorJobs(contractorId) {
  const loggedTime = job.onsite_time
    ? formatTime(job.onsite_time)
    : "Not Logged";
-
-  contractorJobs.forEach(job => {
     const displayStatus = job.contractor_status || job.status;
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -214,17 +216,19 @@ export function populateTechJobs(technician) {
     G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
   }
-  // Format the required_date without time
-  const requiredDate = job.required_date
-  ? formatDate(job.required_date)
-  : "N/A";
+  
+
+  techJobs.forEach(job => {
+// Format the required_date without time
+const requiredDate = job.required_date
+? formatDate(job.required_date)
+: "N/A";
 
 // Format onsite_time as HH:MM, or show "Not Logged"
 const loggedTime = job.onsite_time
-  ? formatTime(job.onsite_time)
-  : "Not Logged";
+? formatTime(job.onsite_time)
+: "Not Logged";
 
-  techJobs.forEach(job => {
     const displayStatus = job.contractor_status || job.status;
 
     const row = document.createElement("tr");
