@@ -2,7 +2,7 @@ import { G } from './globals.js';
 import { formatForDisplay, applyStatusColor } from './utils.js';
 import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
-import { moveJobToInProgress, showUpdateJobForm, updateJobStatus, showAdminReviewModal } from './jobActions.js';
+import { moveJobToInProgress, showUpdateJobForm, showAdminReviewModal } from './jobActions.js';
 
 /**
  * Show the appropriate dashboard (admin, contractor, or tech).
