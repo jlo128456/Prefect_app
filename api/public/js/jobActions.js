@@ -4,6 +4,73 @@ import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashbo
 // Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
 
+export async function showAdminReviewModal(id) {
+  try {
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
+    if (!jobResponse.ok) {
+      throw new Error("Failed to fetch job data.");
+    }
+    const job = await jobResponse.json();
+
+    // Remove any existing modal
+    const existingModal = document.getElementById("adminReviewModal");
+    if (existingModal) existingModal.remove();
+
+    // Create modal container
+    const modal = document.createElement("div");
+    modal.id = "adminReviewModal";
+    modal.classList.add("modal");
+    modal.style.display = "block";
+
+    // Build content with contractor updates
+    const modalContent = `
+      <div class="modal-content">
+        <span class="close-button" id="closeReviewModal">&times;</span>
+        <h3>Review Job: ${job.work_order}</h3>
+        
+        <p><strong>Contractor:</strong> ${job.contractor}</p>
+        <p><strong>Work Performed:</strong> ${job.work_performed || ""}</p>
+        <p><strong>Note Count:</strong> ${job.note_count || 0}</p>
+        <p><strong>Travel Time:</strong> ${job.travel_time || 0} hours</p>
+        <p><strong>Labour Time:</strong> ${job.labour_time || 0} hours</p>
+
+        <!-- Show signature if available -->
+        ${
+          job.signature
+            ? `<img src="${job.signature}" alt="Signature" style="max-width: 100%; border: 1px solid #ccc;" />`
+            : `<p>No signature provided</p>`
+        }
+
+        <!-- Optionally, an "Approve" or "Reject" button here -->
+        <button id="approveReviewBtn">Approve</button>
+        <button id="rejectReviewBtn">Reject</button>
+      </div>
+    `;
+
+    modal.innerHTML = modalContent;
+    document.body.appendChild(modal);
+
+    // Close modal
+    document.getElementById("closeReviewModal").addEventListener("click", () => {
+      modal.remove();
+    });
+
+    // Approve/Reject from this modal
+    document.getElementById("approveReviewBtn").addEventListener("click", async () => {
+      await updateJobStatus(jobId, "Approved");
+      modal.remove();
+    });
+    document.getElementById("rejectReviewBtn").addEventListener("click", async () => {
+      await updateJobStatus(jobId, "Rejected");
+      modal.remove();
+    });
+  } catch (err) {
+    console.error("Error showing admin review form:", err);
+    alert("Failed to load job details.");
+  }
+}
+
+
 /**
  * Move job from Pending -> In Progress -> Completed - Pending Approval.
  * All references now in snake_case.
@@ -91,6 +158,27 @@ export async function moveJobToInProgress(id) {
   }
 }
 
+export async function updateJobStatus(id, newStatus) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update job status.");
+    }
+    // Optionally parse the response
+    alert(`Job status updated to: ${newStatus}`);
+    // Refresh the UI
+    populateAdminJobs();
+    populateContractorJobs(G.currentUser.id);
+    populateTechJobs(G.currentUser.id);
+  } catch (error) {
+    console.error("updateJobStatus error:", error);
+    alert("Could not update job status. Check console for details.");
+  }
+}
 
 
 /**
