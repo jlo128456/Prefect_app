@@ -52,87 +52,31 @@ export function showDashboard(role) {
 }
 
 /**
- * Populate Admin Dashboard (table of jobs) + handle "Add Job" form submissions.
+ * Populate Admin Dashboard (renders table + sets up the modal form).
  */
 export async function populateAdminJobs() {
-  // Clear the admin job list on each call
+  // 1) Clear out existing rows first
   G.adminJobList.innerHTML = "";
 
-  // Validate G.jobs
+  // 2) If needed, fetch latest jobs from server:
+  // const jobs = await fetch(`${API_BASE_URL}/api/jobs`).then(res => res.json());
+  // G.jobs = jobs;
+
   if (!Array.isArray(G.jobs)) {
     console.error("G.jobs is not an array. Current value:", G.jobs);
     return;
   }
 
-  // Attach "Add Job" form submit event (only once)
-  const addJobForm = document.getElementById("admin-add-job-form");
-  if (addJobForm && !addJobForm.dataset.listenerAttached) {
-    addJobForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const workOrder = document.getElementById("work_order").value.trim();
-      const customerName = document.getElementById("customer_name").value.trim();
-      const contractor = document.getElementById("contractor").value.trim();
-      const role = document.getElementById("role").value;
-
-      // Build the job data to send to the server
-      const newJob = {
-        work_order: workOrder,
-        customer_name: customerName,
-        contractor,
-        role,
-        status: "Pending",
-      };
-
-      try {
-        // Use the dynamic base URL here
-        const response = await fetch(`${API_BASE_URL}/api/jobs`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newJob),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to create job. Status: ${response.status}`);
-        }
-
-        // 5) Receive the newly created job (with its assigned ID from MySQL)
-        const createdJob = await response.json();
-
-        // 6) Push it into G.jobs so the table updates without a full refresh
-        G.jobs.push(createdJob);
-
-        // Close the modal after successful creation
-        const modalEl = document.getElementById("adminAddJobModal");
-        // Get the existing modal instance if available; otherwise, create one
-        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
-
-        // Re-populate the table
-        populateAdminJobs();
-
-      } catch (err) {
-        console.error("Error creating job:", err);
-        alert("Failed to create job. Check console for details.");
-      }
-    });
-
-    // Mark that we’ve attached this listener so we don’t attach it again
-    addJobForm.dataset.listenerAttached = "true";
-  }
-
-  //  Render the existing jobs
+  // 3) Render each job as a table row
   G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${job.work_order || "N/A"}</td>
-      <td>${job.customer_name || "N/A"}</td>
-      <td>${job.contractor || "N/A"}</td>
-      <td>${job.role || "N/A"}</td>
-      <td class="status-cell">${job.status || "N/A"}</td>
-      <td>${job.last_updated || ""}</td>
+      <td>${job.work_order || 'N/A'}</td>
+      <td>${job.customer_name || 'N/A'}</td>
+      <td>${job.contractor || 'N/A'}</td>
+      <td>${job.role || 'N/A'}</td>
+      <td class="status-cell">${job.status || 'N/A'}</td>
+      <td>${job.last_updated || ''}</td>
       <td>
         <button class="approve-job" data-id="${job.id}">Approve</button>
         <button class="reject-job" data-id="${job.id}">Reject</button>
@@ -140,11 +84,11 @@ export async function populateAdminJobs() {
     `;
     G.adminJobList.appendChild(row);
 
-    // Apply color styling if you have a custom function
+    // Apply color styling if desired
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
 
-  // 8) Optional: Attach Approve/Reject event listeners, using your API calls
+  // 4) Approve/Reject event listeners
   document.querySelectorAll(".approve-job").forEach((button) =>
     button.addEventListener("click", (e) =>
       updateJobStatus(e.target.dataset.id, "Approved")
@@ -155,6 +99,87 @@ export async function populateAdminJobs() {
       updateJobStatus(e.target.dataset.id, "Pending")
     )
   );
+
+  // 5) Setup the "Create New Job" modal logic (open/close) + form submission
+  setupCreateJobModal();
+}
+
+/** 
+ * Initialize the Create Job modal logic + form submission 
+ */
+function setupCreateJobModal() {
+  const openModalBtn = document.getElementById("openCreateJobModal");
+  const closeOverlay = document.getElementById("closeModalOverlay");
+  const closeBtn = document.getElementById("closeCreateJobModal");
+  const modal = document.getElementById("createJobModal");
+  const addJobForm = document.getElementById("admin-add-job-form");
+
+  // Show the modal
+  openModalBtn.addEventListener("click", () => {
+    modal.style.display = "block";
+  });
+
+  // Hide the modal if user clicks the overlay or the close button
+  closeOverlay.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Attach form submit (only once)
+  if (!addJobForm.dataset.listenerAttached) {
+    addJobForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Collect form values
+      const workOrder = document.getElementById("work_order").value.trim();
+      const customerName = document.getElementById("customer_name").value.trim();
+      const contractor = document.getElementById("contractor").value.trim();
+      const role = document.getElementById("role").value;
+
+      // Build new job object
+      const newJob = {
+        work_order: workOrder,
+        customer_name: customerName,
+        contractor,
+        role,
+        status: "Pending"
+      };
+
+      try {
+        // POST to your server
+        const response = await fetch(`${API_BASE_URL}/api/jobs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newJob),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error creating job: ${response.status}`);
+        }
+
+        // Returned newly inserted job from MySQL (including new ID)
+        const createdJob = await response.json();
+
+        // Add to our local array
+        G.jobs.push(createdJob);
+
+        // Refresh the table
+        populateAdminJobs();
+
+        // Close the modal + clear form
+        modal.style.display = "none";
+        addJobForm.reset();
+
+      } catch (err) {
+        console.error("Create job failed:", err);
+        alert("Failed to create job, see console for details.");
+      }
+    });
+
+    addJobForm.dataset.listenerAttached = "true";
+  }
 }
 /**
  * Populate Contractor Dashboard.

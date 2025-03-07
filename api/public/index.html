@@ -39,24 +39,62 @@
     </form>
 
     <!-- Admin View -->
-    <div id="adminView" class="d-none">
-      <h2>Administrator Dashboard</h2>
-      <p>Monitor all job statuses and contractor performance.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Work Order</th>
-            <th>Customer Name</th>
-            <th>Contractor</th>
-            <th>Role</th> <!-- NEW COLUMN -->
-            <th>Status</th>
-            <th>Last Updated</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="adminJobList"></tbody>
-      </table>
-    </div>
+<div id="adminView" class="d-none">
+  <h2>Administrator Dashboard</h2>
+  <p>Monitor all job statuses and contractor performance.</p>
+
+  <!-- Create New Job Button -->
+  <button id="openCreateJobModal">Create New Job</button>
+
+  <!-- Existing Admin Jobs Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Work Order</th>
+        <th>Customer Name</th>
+        <th>Contractor</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Last Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="adminJobList"></tbody>
+  </table>
+</div>
+
+<!-- Modal Container (Hidden by default) -->
+<div id="createJobModal" class="modal" style="display: none;">
+  <!-- Overlay background so clicking outside can close the modal if desired -->
+  <div class="modal-overlay" id="closeModalOverlay"></div>
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close-button" id="closeCreateJobModal">&times;</span>
+    <h3>Create New Job</h3>
+    <!-- "Add Job" Form inside the modal -->
+    <form id="admin-add-job-form">
+      <label for="work_order">Work Order:</label>
+      <input type="text" id="work_order" name="work_order" required>
+
+      <label for="customer_name">Customer Name:</label>
+      <input type="text" id="customer_name" name="customer_name" required>
+
+      <label for="contractor">Contractor/Tech Name:</label>
+      <input type="text" id="contractor" name="contractor" required>
+
+      <label for="role">Role:</label>
+      <select id="role" name="role" required>
+        <option value="">Select a Role</option>
+        <option value="Contractor">Contractor</option>
+        <option value="Technician">Technician</option>
+        <option value="Manager">Manager</option>
+      </select>
+
+      <button type="submit">Add Job</button>
+    </form>
+  </div>
+</div>
 
     <!-- Contractor View -->
     <div id="contractorView" class="d-none">
