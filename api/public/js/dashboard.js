@@ -296,13 +296,17 @@ export function populateContractorJobs(contractorId) {
 /**
  * Populate Tech Dashboard (same structure as Contractor Dashboard).
  */
-export function populateTechJobs(id) {
+export function populateTechJobs(Techid) {
+  if (Techid !== G.currentUser.id) {
+    console.warn(`Parameter contractorId (${Techid}) does not match G.currentUser.id (${G.currentUser.id}). Overriding parameter with G.currentUser.id.`);
+    Techid = G.currentUser.id;
+  }
+  G.techJobList.innerHTML = "";
+
   if (!G.techJobList) {
-    console.error("G.techJobList is not defined or not found in the DOM.");
+    console.error("G.contractorJobList is not defined or not found in the DOM.");
     return;
   }
-
-  G.techJobList.innerHTML = "";
 
   if (!Array.isArray(G.jobs)) {
     console.error("G.jobs is not an array. Current value:", G.jobs);
