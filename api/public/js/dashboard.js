@@ -74,7 +74,6 @@ export async function populateAdminJobs() {
       <td>${job.work_order || 'N/A'}</td>
       <td>${job.customer_name || 'N/A'}</td>
       <td>${job.contractor || 'N/A'}</td>
-      <td>${job.work_required || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
       <td>${job.last_updated || ''}</td>
