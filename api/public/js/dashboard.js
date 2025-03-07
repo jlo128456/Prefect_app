@@ -82,9 +82,7 @@ export async function populateAdminJobs() {
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
           : ""
       }
-      <button class="approve-job" data-id="${job.id}">Approve</button>
-      <button class="reject-job" data-id="${job.id}">Reject</button>
-    </td>
+          </td>
   `;
     G.adminJobList.appendChild(row);
 
