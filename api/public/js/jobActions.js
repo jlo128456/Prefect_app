@@ -100,13 +100,15 @@ export async function moveJobToInProgress(id) {
  */
 export async function showUpdateJobForm(id) {
   try {
+    console.log("showUpdateJobForm called with id:", id);
     // Fetch the job record from the API.
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
     if (!jobResponse.ok) {
-      console.error('Job not found!');
+      console.error("Job not found!");
       return;
     }
     const job = await jobResponse.json();
+    console.log("Fetched job:", job);
 
     // Fetch available machines from the API.
     const machinesResponse = await fetch(`${API_BASE_URL}/machines`);
@@ -114,83 +116,79 @@ export async function showUpdateJobForm(id) {
     if (machinesResponse.ok) {
       availableMachines = await machinesResponse.json();
     } else {
-      console.error('Error fetching machines:', machinesResponse.statusText);
+      console.error("Error fetching machines:", machinesResponse.statusText);
     }
 
-    // Remove any existing form or overlay.
-    const existingForm = document.getElementById('updateJobContainer');
-    const existingOverlay = document.getElementById('modalOverlay');
-    if (existingForm) existingForm.remove();
-    if (existingOverlay) existingOverlay.remove();
+    // Remove any existing update modal.
+    const existingModal = document.getElementById("updateJobModal");
+    if (existingModal) existingModal.remove();
 
     // Hide main views.
-    G.adminView.style.display = 'none';
-    G.contractorView.style.display = 'none';
-    G.techView.style.display ='none'
+    if (G.adminView) G.adminView.style.display = "none";
+    if (G.contractorView) G.contractorView.style.display = "none";
+    if (G.techView) G.techView.style.display = "none";
 
-    // Create overlay.
-    const modalOverlay = document.createElement('div');
-    modalOverlay.id = 'modalOverlay';
-    Object.assign(modalOverlay.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%',
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: '999',
-    });
-    document.body.appendChild(modalOverlay);
+    // Create a modal container using your CSS classes.
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "updateJobModal";
+    modalContainer.classList.add("modal");
+    modalContainer.style.display = "block"; // override default to show the modal
 
-    // For contractors, hide the status dropdown (always 'Completed').
-    const statusField = G.currentUserRole === 'contractor'
-      ? `<input type="hidden" id="jobStatus" value="Completed">`
-      : `
-        <select id="jobStatus" required>
-          <option value="Pending" ${job.status === 'Pending' ? 'selected' : ''}>Pending</option>
-          <option value="In Progress" ${job.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-          <option value="Completed - Pending Approval" ${job.status === 'Completed - Pending Approval' ? 'selected' : ''}>Completed - Pending Approval</option>
-        </select>
-      `;
+    // Create the modal content container.
+    const modalContent = document.createElement("div");
+    modalContent.classList.add("modal-content");
+
+    // Determine the status field HTML.
+    const statusField =
+      G.currentUserRole === "contractor"
+        ? `<input type="hidden" id="jobStatus" value="Completed">`
+        : `
+          <select id="jobStatus" required>
+            <option value="Pending" ${job.status === "Pending" ? "selected" : ""}>Pending</option>
+            <option value="In Progress" ${job.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option value="Completed - Pending Approval" ${job.status === "Completed - Pending Approval" ? "selected" : ""}>Completed - Pending Approval</option>
+          </select>
+        `;
 
     // Build the update form HTML.
     const formHTML = `
-      <div id="updateJobContainer">
+      <div id="updateJobContainerInner">
+        <span class="close-button" id="closeUpdateModal">&times;</span>
         <h3>Update Work Order: ${job.work_order}</h3>
         <form id="updateJobForm">
-          <div>
+          <div class="form-row">
             <label>Customer Name</label>
             <input type="text" id="customerName" value="${job.customer_name}" required>
           </div>
-          <div>
+          <div class="form-row">
             <label>Contact Name</label>
             <input type="text" id="contactName" value="${job.contact_name || ''}" required>
           </div>
-          <div>
+          <div class="form-row">
             <label>Travel Time (hours)</label>
             <input type="number" id="travelTime" min="0" step="0.5" value="${job.travel_time || 0}" required>
           </div>
-          <div>
+          <div class="form-row">
             <label>Labour Time (hours)</label>
             <input type="number" id="labourTime" min="0" step="0.5" value="${job.labour_time || 0}" required>
           </div>
-          <div>
-          <label>Note Count</label>
+          <div class="form-row">
+            <label>Note Count (hours)</label>
             <input type="number" id="note_count" value="${job.note_count || ''}" required>
           </div>
-          <div>
+          <div class="form-row">
             <label>Work Performed</label>
             <select id="workPerformedDropdown">
               <option value="">Select Common Work Performed</option>
               <option value="Routine Maintenance">Routine Maintenance</option>
-              <option value="Software Update">Software Updated</option>
+              <option value="Software Update">Software Update</option>
               <option value="Parts Replacement">Parts Replacement</option>
               <option value="Hardware Repair">Hardware Repair</option>
-              <option value="System Calibration">Sensors Calibration</option>
+              <option value="System Calibration">System Calibration</option>
             </select>
             <textarea id="workPerformed" rows="3" required>${job.work_performed || ''}</textarea>
           </div>
-          <div>
+          <div class="form-row">
             <label>Select Machines</label>
             <select id="machineSelect">
               <option value="">Select Machine</option>
@@ -203,39 +201,39 @@ export async function showUpdateJobForm(id) {
               Array.isArray(job.machines)
                 ? job.machines.map(machineId => {
                     const machine = availableMachines.find(m => m.machineId === machineId);
-                    if (!machine) return '';
+                    if (!machine) return "";
                     return `
                       <div class="machine-entry" data-id="${machine.machineId}">
                         <strong>${machine.machineType} - ${machine.model}</strong>
                         <label>Notes:</label>
-                        <textarea class="machine-notes">${machine.notes || ''}</textarea>
+                        <textarea class="machine-notes">${machine.notes || ""}</textarea>
                         <label>Parts Used:</label>
-                        <input type="text" class="machine-parts" value="${machine.partsUsed || ''}">
+                        <input type="text" class="machine-parts" value="${machine.partsUsed || ""}">
                         <button type="button" class="remove-machine">Remove</button>
                       </div>
                     `;
-                  }).join('')
-                : ''
+                  }).join("")
+                : ""
             }
           </div>
-          <div>
+          <div class="form-row">
             <label>Job Status</label>
             ${statusField}
           </div>
-          <div>
+          <div class="form-row">
             <label>Completion Date</label>
             <input type="date" id="completionDate" value="${job.completion_date || ''}" required>
           </div>
-          <div>
+          <div class="form-row">
             <label>Checklist</label>
             <div>
-              <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? 'checked' : ''}> No Missing Screws
-              <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? 'checked' : ''}> Software Updated
-              <input type="checkbox" id="checkTested" ${job.checklist?.tested ? 'checked' : ''}> Tested
-              <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? 'checked' : ''}> Approved by Management
+              <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? "checked" : ""}> No Missing Screws
+              <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? "checked" : ""}> Software Updated
+              <input type="checkbox" id="checkTested" ${job.checklist?.tested ? "checked" : ""}> Tested
+              <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? "checked" : ""}> Approved by Management
             </div>
           </div>
-          <div>
+          <div class="form-row">
             <label>Signature</label>
             <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
             <button type="button" id="clearSignature">Clear Signature</button>
@@ -246,67 +244,87 @@ export async function showUpdateJobForm(id) {
       </div>
     `;
 
-    // Insert the update form into the DOM.
-    const updateFormContainer = document.createElement('div');
-    updateFormContainer.innerHTML = formHTML;
-    document.body.appendChild(updateFormContainer);
-    
-    // --- Signature Pad Setup ---
-    const signatureCanvas = document.getElementById('signatureCanvas');
-    const ctx = signatureCanvas.getContext('2d');
-    let isDrawing = false;
+    // Set the modal content.
+    modalContent.innerHTML = formHTML;
+    modalContainer.appendChild(modalContent);
+    document.body.appendChild(modalContainer);
 
-    // Load existing signature if available.
+    // --- Close Modal Button Logic ---
+    const closeBtn = document.getElementById("closeUpdateModal");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        modalContainer.remove();
+        showDashboard(G.currentUserRole);
+      });
+    } else {
+      console.error("Close button not found");
+    }
+
+    // --- Attach Work Performed Dropdown Logic ---
+    const workPerformedDropdown = document.getElementById("workPerformedDropdown");
+    if (workPerformedDropdown) {
+      workPerformedDropdown.addEventListener("change", function () {
+        const selectedPhrase = this.value;
+        if (selectedPhrase) {
+          const textarea = document.getElementById("workPerformed");
+          textarea.value += selectedPhrase + "\n";
+          this.value = ""; // Reset dropdown after selection
+        }
+      });
+    } else {
+      console.error("workPerformedDropdown element not found");
+    }
+
+    // --- Signature Pad Setup ---
+    const signatureCanvas = document.getElementById("signatureCanvas");
+    const ctx = signatureCanvas.getContext("2d");
+    let isDrawing = false;
     if (job.signature) {
       const img = new Image();
       img.src = job.signature;
       img.onload = () => ctx.drawImage(img, 0, 0);
     }
-
-    signatureCanvas.addEventListener('mousedown', e => {
+    signatureCanvas.addEventListener("mousedown", e => {
       isDrawing = true;
       ctx.beginPath();
       ctx.moveTo(e.offsetX, e.offsetY);
     });
-    signatureCanvas.addEventListener('mouseup', () => (isDrawing = false));
-    signatureCanvas.addEventListener('mousemove', e => {
+    signatureCanvas.addEventListener("mouseup", () => (isDrawing = false));
+    signatureCanvas.addEventListener("mousemove", e => {
       if (!isDrawing) return;
       ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = 'black';
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
     });
-    document.getElementById('clearSignature').addEventListener('click', () => {
-      ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-    });
+    const clearSignatureBtn = document.getElementById("clearSignature");
+    if (clearSignatureBtn) {
+      clearSignatureBtn.addEventListener("click", () => {
+        ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+      });
+    } else {
+      console.error("clearSignature element not found");
+    }
 
-    // Work Performed dropdown logic.
-    document.getElementById('workPerformedDropdown').addEventListener('change', function() {
-      const selectedPhrase = this.value;
-      const textarea = document.getElementById('workPerformed');
-      if (selectedPhrase) {
-        textarea.value += selectedPhrase + '\n';
-      }
-    });
-
-    // Add Machine functionality.
-    document.getElementById('addMachine').addEventListener('click', () => {
-      const machineSelect = document.getElementById('machineSelect');
+    // --- Machine Add/Remove Functionality ---
+    const addMachineBtn = document.getElementById("addMachine");
+    addMachineBtn.addEventListener("click", () => {
+      const machineSelect = document.getElementById("machineSelect");
       const selectedMachineId = machineSelect.value;
       const selectedMachineName = machineSelect.options[machineSelect.selectedIndex].text;
       if (!selectedMachineId) {
-        alert('Please select a machine!');
+        alert("Please select a machine!");
         return;
       }
-      const machineList = document.getElementById('machineList');
+      const machineList = document.getElementById("machineList");
       if (document.querySelector(`[data-id="${selectedMachineId}"]`)) {
-        alert('Machine already added!');
+        alert("Machine already added!");
         return;
       }
-      const machineEntry = document.createElement('div');
-      machineEntry.classList.add('machine-entry');
-      machineEntry.setAttribute('data-id', selectedMachineId);
+      const machineEntry = document.createElement("div");
+      machineEntry.classList.add("machine-entry");
+      machineEntry.setAttribute("data-id", selectedMachineId);
       machineEntry.innerHTML = `
         <strong>${selectedMachineName}</strong>
         <label>Notes:</label>
@@ -317,52 +335,51 @@ export async function showUpdateJobForm(id) {
       `;
       machineList.appendChild(machineEntry);
     });
-
-    // Remove Machine functionality.
-    document.getElementById('machineList').addEventListener('click', event => {
-      if (event.target.classList.contains('remove-machine')) {
+    document.getElementById("machineList").addEventListener("click", event => {
+      if (event.target.classList.contains("remove-machine")) {
         event.target.parentElement.remove();
       }
     });
 
-    document.getElementById('updateJobForm').addEventListener('submit', async e => {
+    // --- Handle Update Form Submission ---
+    document.getElementById("updateJobForm").addEventListener("submit", async e => {
       e.preventDefault();
-      let newStatus = document.getElementById('jobStatus').value;
+      let newStatus = document.getElementById("jobStatus").value;
       let newContractorStatus = newStatus;
-      if (G.currentUserRole === 'contractor' && newStatus === 'Completed') {
-        newStatus = 'Completed - Pending Approval';
-        newContractorStatus = 'Completed';
+      if (G.currentUserRole === "contractor" && newStatus === "Completed") {
+        newStatus = "Completed - Pending Approval";
+        newContractorStatus = "Completed";
       }
       
       // Collect updated note count along with other values.
-      const noteCount = document.getElementById('note_count').value;
+      const noteCount = document.getElementById("note_count").value;
       
-      // Collect updated machine data as before.
-      const updatedMachines = [...document.querySelectorAll('.machine-entry')].map(machine => ({
-        id: machine.getAttribute('data-id'),
-        name: machine.querySelector('strong').innerText,
-        notes: machine.querySelector('.machine-notes').value,
-        partsUsed: machine.querySelector('input.machine-parts').value,
+      // Collect updated machine data.
+      const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
+        id: machine.getAttribute("data-id"),
+        name: machine.querySelector("strong").innerText,
+        notes: machine.querySelector(".machine-notes").value,
+        partsUsed: machine.querySelector("input.machine-parts").value,
       }));
       
-      const signatureData = signatureCanvas.toDataURL('image/png');
+      const signatureData = signatureCanvas.toDataURL("image/png");
     
-      // Build updated job data, now including note_count.
+      // Build updated job data.
       const updatedJobData = {
-        customer_name: document.getElementById('customerName').value.trim(),
-        contact_name: document.getElementById('contactName').value.trim(),
-        work_performed: document.getElementById('workPerformed').value.trim(),
-        travel_time: document.getElementById('travelTime').value,
-        labour_time: document.getElementById('labourTime').value,
-        note_count: noteCount, // New field added here
+        customer_name: document.getElementById("customerName").value.trim(),
+        contact_name: document.getElementById("contactName").value.trim(),
+        work_performed: document.getElementById("workPerformed").value.trim(),
+        travel_time: document.getElementById("travelTime").value,
+        labour_time: document.getElementById("labourTime").value,
+        note_count: noteCount,
         status: newStatus,
         contractor_status: newContractorStatus,
-        completion_date: document.getElementById('completionDate').value,
+        completion_date: document.getElementById("completionDate").value,
         checklist: {
-          noMissingScrews: document.getElementById('checkScrews').checked,
-          softwareUpdated: document.getElementById('checkSoftwareUpdated').checked,
-          tested: document.getElementById('checkTested').checked,
-          approvedByManagement: document.getElementById('checkApproved').checked,
+          noMissingScrews: document.getElementById("checkScrews").checked,
+          softwareUpdated: document.getElementById("checkSoftwareUpdated").checked,
+          tested: document.getElementById("checkTested").checked,
+          approvedByManagement: document.getElementById("checkApproved").checked,
         },
         signature: signatureData,
         machines: updatedMachines,
@@ -372,32 +389,32 @@ export async function showUpdateJobForm(id) {
         // Merge updated data with the existing job object.
         const updatedJob = { ...job, ...updatedJobData };
     
-        // Send a PUT request to update the job via your API.
+        // Send a PUT request to update the job.
         const putResponse = await fetch(`${API_BASE_URL}/jobs/${job.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedJob),
         });
-        if (!putResponse.ok) throw new Error('Failed to update job.');
+        if (!putResponse.ok) throw new Error("Failed to update job.");
     
-        alert('Job updated successfully and submitted for admin approval.');
-        updateFormContainer.remove();
-        modalOverlay.remove();
+        alert("Job updated successfully and submitted for admin approval.");
+        modalContainer.remove();
         showDashboard(G.currentUserRole);
       } catch (error) {
-        console.error('Error updating job:', error);
-        alert('Failed to update the job.');
+        console.error("Error updating job:", error);
+        alert("Failed to update the job.");
       }
     });
-
-    // Back to Dashboard button.
-    document.getElementById('backToDashboard').addEventListener('click', () => {
-      updateFormContainer.remove();
-      modalOverlay.remove();
+    
+    // --- Back to Dashboard Button ---
+    const backBtn = document.getElementById("backToDashboard");
+    backBtn.addEventListener("click", () => {
+      modalContainer.remove();
       showDashboard(G.currentUserRole);
     });
+    
   } catch (error) {
-    console.error('Error showing update form:', error);
-    alert('Failed to load job data.');
+    console.error("Error showing update form:", error);
+    alert("Failed to load job data.");
   }
 }
