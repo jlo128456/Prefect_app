@@ -69,46 +69,42 @@ app.get('/jobs/:id', async (req, res) => {
     console.error('Error retrieving job:', error);
     res.status(500).json({ error: 'Database query failed' });
   }
-});
-
-app.post('/jobs', async (req, res) => {
-  // Expect snake_case keys in the request body
-  const { work_order, customer_name, contractor, work_required, status = 'Pending' } = req.body;
-  try {
-    const query = 'INSERT INTO jobs (work_order, customer_name, contractor, work_required, status) VALUES (?, ?, ?, ?, ?)';
-    const [result] = await pool.query(query, [work_order, customer_name, contractor, work_required, status]);
-    res.json({ id: result.insertId, work_order, customer_name, contractor, work_required, status });
-  } catch (error) {
-    console.error('Error inserting job:', error);
-    res.status(500).json({ error: 'Database insert failed' });
-  }
-});
-
-app.put('/jobs/:id', async (req, res) => {
-  const { id } = req.params; // Extract ID from URL
-  const { status, contractor_status, onsite_time, status_timestamp } = req.body;
-
-  try {
-    // Ensure job exists before updating
-    const [existingJob] = await pool.query("SELECT * FROM jobs WHERE id = ?", [id]);
-    if (existingJob.length === 0) {
-      return res.status(404).json({ error: "Job not found" });
+  app.post('/jobs', async (req, res) => {
+    // Destructure the expected keys from the request body.
+    const { work_order, customer_name, contractor, role, work_required, work_performed, note_count } = req.body;
+    const status = 'Pending';
+    
+    try {
+      // Query the maximum id (assumes ids are numeric strings)
+      const [rows] = await pool.query("SELECT MAX(CAST(id AS UNSIGNED)) AS maxId FROM jobs");
+      // If there are no rows, default to 1
+      const nextId = rows[0].maxId ? (parseInt(rows[0].maxId, 10) + 1).toString() : "1";
+  
+      const query = `
+        INSERT INTO jobs 
+        (id, work_order, customer_name, contractor, role, work_required, work_performed, note_count, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const [result] = await pool.query(query, [
+        nextId,
+        work_order, 
+        customer_name, 
+        contractor, 
+        role.toLowerCase(),  // Ensure role is valid
+        work_required, 
+        work_performed, 
+        note_count, 
+        status
+      ]);
+      
+      res.json({ id: nextId, work_order, customer_name, contractor, role: role.toLowerCase(), work_required, work_performed, note_count, status });
+    } catch (error) {
+      console.error('Error inserting job:', error);
+      res.status(500).json({ error: 'Database insert failed' });
     }
-
-    // Update job
-    const query = `
-      UPDATE jobs 
-      SET status = ?, contractor_status = ?, onsite_time = ?, status_timestamp = ? 
-      WHERE id = ?`;
-    const [result] = await pool.query(query, [status, contractor_status, onsite_time, status_timestamp, id]);
-
-    res.json({ success: true, message: "Job updated successfully" });
-  } catch (error) {
-    console.error("Error updating job:", error);
-    res.status(500).json({ error: "Database update failed" });
-  }
+  });
+  
 });
-
 // USERS ENDPOINTS
 app.get('/users', async (req, res) => {
   try {
