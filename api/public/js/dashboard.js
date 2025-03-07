@@ -136,6 +136,7 @@ function setupCreateJobModal() {
       // Collect form values (including work_required)
       const workOrder = document.getElementById("work_order").value.trim();
       const customerName = document.getElementById("customer_name").value.trim();
+      const customerAddress = document.getElementById("customer_address").value.trim();
       const contractor = document.getElementById("contractor").value.trim();
       const workRequired = document.getElementById("work_required").value.trim();
       const role = document.getElementById("role").value;
@@ -144,7 +145,8 @@ function setupCreateJobModal() {
       const newJob = {
         work_order: workOrder,
         customer_name: customerName,
-        contractor,
+        customer_address: customerAddress,
+        contractor: contractor,
         work_required: workRequired,
         role,
       };
