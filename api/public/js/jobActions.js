@@ -57,11 +57,11 @@ export async function showAdminReviewModal(id) {
 
     // Approve/Reject from this modal
     document.getElementById("approveReviewBtn").addEventListener("click", async () => {
-      await updateJobStatus(jobId, "Approved");
+      await updateJobStatus(id, "Approved");
       modal.remove();
     });
     document.getElementById("rejectReviewBtn").addEventListener("click", async () => {
-      await updateJobStatus(jobId, "Rejected");
+      await updateJobStatus(id, "Rejected");
       modal.remove();
     });
   } catch (err) {
