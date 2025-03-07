@@ -63,33 +63,43 @@
   </table>
 </div>
 
-<!-- Modal Container (Hidden by default) -->
+<!-- The Modal (hidden by default) -->
 <div id="createJobModal" class="modal" style="display: none;">
-  <!-- Overlay background so clicking outside can close the modal if desired -->
   <div class="modal-overlay" id="closeModalOverlay"></div>
 
-  <!-- Modal content -->
+  <!-- Modal Content Wrapper -->
   <div class="modal-content">
+    <!-- Close button -->
     <span class="close-button" id="closeCreateJobModal">&times;</span>
-    <h3>Create New Job</h3>
-    <!-- "Add Job" Form inside the modal -->
+
+    <h2>Create New Job</h2>
+
+    <!-- Form with each label/input in its own row -->
     <form id="admin-add-job-form">
-      <label for="work_order">Work Order:</label>
-      <input type="text" id="work_order" name="work_order" required>
+      <div class="form-row">
+        <label for="work_order">Work Order:</label>
+        <input type="text" id="work_order" name="work_order" required />
+      </div>
 
-      <label for="customer_name">Customer Name:</label>
-      <input type="text" id="customer_name" name="customer_name" required>
+      <div class="form-row">
+        <label for="customer_name">Customer Name:</label>
+        <input type="text" id="customer_name" name="customer_name" required />
+      </div>
 
-      <label for="contractor">Contractor/Tech Name:</label>
-      <input type="text" id="contractor" name="contractor" required>
+      <div class="form-row">
+        <label for="contractor">Contractor/Tech Name:</label>
+        <input type="text" id="contractor" name="contractor" required />
+      </div>
 
-      <label for="role">Role:</label>
-      <select id="role" name="role" required>
-        <option value="">Select a Role</option>
-        <option value="Contractor">Contractor</option>
-        <option value="Technician">Technician</option>
-        <option value="Manager">Manager</option>
-      </select>
+      <div class="form-row">
+        <label for="role">Role:</label>
+        <select id="role" name="role" required>
+          <option value="">Select a Role</option>
+          <option value="Contractor">Contractor</option>
+          <option value="Technician">Technician</option>
+          <option value="Manager">Manager</option>
+        </select>
+      </div>
 
       <button type="submit">Add Job</button>
     </form>

@@ -116,6 +116,7 @@ function setupCreateJobModal() {
 
   // Show the modal
   openModalBtn.addEventListener("click", () => {
+    console.log("Create New Job button clicked!");
     modal.style.display = "block";
   });
 
