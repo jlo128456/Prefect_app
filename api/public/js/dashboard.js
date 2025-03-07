@@ -153,7 +153,7 @@ function setupCreateJobModal() {
 
       try {
         // POST to your server
-        const response = await fetch(`${API_BASE_URL}/jobs`, {
+        const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newJob),
