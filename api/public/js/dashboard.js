@@ -147,7 +147,6 @@ function setupCreateJobModal() {
         contractor,
         work_required: workRequired,
         role,
-        status: "Pending"
       };
 
       try {
