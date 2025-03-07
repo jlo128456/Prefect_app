@@ -247,7 +247,7 @@ footer p {
   .modal-content {
     position: relative;
     background: #fff;
-    width: 400px;              /* fixed width for the modal */
+    width: 500px;              /* fixed width for the modal */
     padding: 20px 30px;        /* nice padding around content */
     margin: 100px auto;        /* centers horizontally */
     border-radius: 6px;        /* slightly rounded corners */
