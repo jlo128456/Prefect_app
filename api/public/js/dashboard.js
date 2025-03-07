@@ -279,7 +279,10 @@ export function populateContractorJobs(contractorId) {
 
   // Job Completed button event handlers
   document.querySelectorAll(".update-job").forEach(button =>
-    button.addEventListener("click", e => showUpdateJobForm(e.target.dataset.id))
+    button.addEventListener("click", e => {
+      console.log("Update job button clicked for job id:", e.target.dataset.id);
+      showUpdateJobForm(e.target.dataset.id);
+    })
   );
 }
 
