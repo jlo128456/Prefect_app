@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { formatForDisplay, applyStatusColor } from './utils.js';
+import { formatForDisplay, applyStatusColor, formatForMySQL } from './utils.js';
 import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm, showAdminReviewModal } from './jobActions.js';
@@ -233,13 +233,7 @@ export function populateContractorJobs(contractorId) {
      const encodedAddress = encodeURIComponent(job.customer_address);
      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 
-     function formatForMySQL(dateInput) {
-      if (!dateInput) return null; // Ensure NULL values are handled
-    
-      const date = new Date(dateInput);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-    }
-    
+     
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -302,7 +296,7 @@ export function populateContractorJobs(contractorId) {
 /**
  * Populate Tech Dashboard (same structure as Contractor Dashboard).
  */
-export function populateTechJobs(techId) {
+export function populateTechJobs(id) {
   if (!G.techJobList) {
     console.error("G.techJobList is not defined or not found in the DOM.");
     return;
@@ -315,7 +309,7 @@ export function populateTechJobs(techId) {
     return;
   }
 
-  const techJobs = G.jobs.filter(job => job.assigned_tech === techId);
+  const techJobs = G.jobs.filter(job => job.assigned_tech === id);
   if (techJobs.length === 0) {
     G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
