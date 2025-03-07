@@ -98,10 +98,10 @@ export async function moveJobToInProgress(id) {
  * This function fetches job and machine data from your API.
  * All references now in snake_case.
  */
-export async function showUpdateJobForm(jobId) {
+export async function showUpdateJobForm(id) {
   try {
     // Fetch the job record from the API.
-    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
     if (!jobResponse.ok) {
       console.error('Job not found!');
       return;
@@ -155,92 +155,97 @@ export async function showUpdateJobForm(jobId) {
 
     // Build the update form HTML.
     const formHTML = `
-      <div id="updateJobContainer">
-        <h3>Update Work Order: ${job.work_order}</h3>
-        <form id="updateJobForm">
-          <div>
-            <label>Customer Name</label>
-            <input type="text" id="customerName" value="${job.customer_name}" required>
-          </div>
-          <div>
-            <label>Contact Name</label>
-            <input type="text" id="contactName" value="${job.contact_name || ''}" required>
-          </div>
-          <div>
-            <label>Travel Time (hours)</label>
-            <input type="number" id="travelTime" min="0" step="0.5" value="${job.travel_time || 0}" required>
-          </div>
-          <div>
-            <label>Labour Time (hours)</label>
-            <input type="number" id="labourTime" min="0" step="0.5" value="${job.labour_time || 0}" required>
-          </div>
-          <div>
-            <label>Work Performed</label>
-            <select id="workPerformedDropdown">
-              <option value="">Select Common Work Performed</option>
-              <option value="Routine Maintenance">Routine Maintenance</option>
-              <option value="Software Update">Software Updated</option>
-              <option value="Parts Replacement">Parts Replacement</option>
-              <option value="Hardware Repair">Hardware Repair</option>
-              <option value="System Calibration">Sensors Calibration</option>
-            </select>
-            <textarea id="workPerformed" rows="3" required>${job.work_performed || ''}</textarea>
-          </div>
-          <div>
-            <label>Select Machines</label>
-            <select id="machineSelect">
-              <option value="">Select Machine</option>
-              ${availableMachines.map(machine => `<option value="${machine.machineId}">${machine.machineType} - ${machine.model}</option>`).join('')}
-            </select>
-            <button type="button" id="addMachine">Add Machine</button>
-          </div>
-          <div id="machineList">
-            ${
-              Array.isArray(job.machines)
-                ? job.machines.map(machineId => {
-                    const machine = availableMachines.find(m => m.machineId === machineId);
-                    if (!machine) return '';
-                    return `
-                      <div class="machine-entry" data-id="${machine.machineId}">
-                        <strong>${machine.machineType} - ${machine.model}</strong>
-                        <label>Notes:</label>
-                        <textarea class="machine-notes">${machine.notes || ''}</textarea>
-                        <label>Parts Used:</label>
-                        <input type="text" class="machine-parts" value="${machine.partsUsed || ''}">
-                        <button type="button" class="remove-machine">Remove</button>
-                      </div>
-                    `;
-                  }).join('')
-                : ''
-            }
-          </div>
-          <div>
-            <label>Job Status</label>
-            ${statusField}
-          </div>
-          <div>
-            <label>Completion Date</label>
-            <input type="date" id="completionDate" value="${job.completion_date || ''}" required>
-          </div>
-          <div>
-            <label>Checklist</label>
-            <div>
-              <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? 'checked' : ''}> No Missing Screws
-              <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? 'checked' : ''}> Software Updated
-              <input type="checkbox" id="checkTested" ${job.checklist?.tested ? 'checked' : ''}> Tested
-              <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? 'checked' : ''}> Approved by Management
-            </div>
-          </div>
-          <div>
-            <label>Signature</label>
-            <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
-            <button type="button" id="clearSignature">Clear Signature</button>
-          </div>
-          <button type="submit">Save</button>
-        </form>
-        <button type="button" id="backToDashboard">Back to Dashboard</button>
+  <div id="updateJobContainer">
+    <h3>Update Work Order: ${job.work_order}</h3>
+    <form id="updateJobForm">
+      <div>
+        <label>Customer Name</label>
+        <input type="text" id="customerName" value="${job.customer_name}" required>
       </div>
-    `;
+      <div>
+        <label>Contact Name</label>
+        <input type="text" id="contactName" value="${job.contact_name || ''}" required>
+      </div>
+      <div>
+        <label>Travel Time (hours)</label>
+        <input type="number" id="travelTime" min="0" step="0.5" value="${job.travel_time || 0}" required>
+      </div>
+      <div>
+        <label>Labour Time (hours)</label>
+        <input type="number" id="labourTime" min="0" step="0.5" value="${job.labour_time || 0}" required>
+      </div>
+      <div>
+        <label>Note Count (hours)</label>
+        <input type="number" id="note_count" value="${job.note_count || ''}" required>
+      </div>
+      <div>
+        <label>Work Performed</label>
+        <select id="workPerformedDropdown">
+          <option value="">Select Common Work Performed</option>
+          <option value="Routine Maintenance">Routine Maintenance</option>
+          <option value="Software Update">Software Updated</option>
+          <option value="Parts Replacement">Parts Replacement</option>
+          <option value="Hardware Repair">Hardware Repair</option>
+          <option value="System Calibration">Sensors Calibration</option>
+        </select>
+        <textarea id="workPerformed" rows="3" required>${job.work_performed || ''}</textarea>
+      </div>
+      <div>
+        <label>Select Machines</label>
+        <select id="machineSelect">
+          <option value="">Select Machine</option>
+          ${availableMachines.map(machine => `<option value="${machine.machineId}">${machine.machineType} - ${machine.model}</option>`).join('')}
+        </select>
+        <button type="button" id="addMachine">Add Machine</button>
+      </div>
+      <div id="machineList">
+        ${
+          Array.isArray(job.machines)
+            ? job.machines.map(machineId => {
+                const machine = availableMachines.find(m => m.machineId === machineId);
+                if (!machine) return '';
+                return `
+                  <div class="machine-entry" data-id="${machine.machineId}">
+                    <strong>${machine.machineType} - ${machine.model}</strong>
+                    <label>Notes:</label>
+                    <textarea class="machine-notes">${machine.notes || ''}</textarea>
+                    <label>Parts Used:</label>
+                    <input type="text" class="machine-parts" value="${machine.partsUsed || ''}">
+                    <button type="button" class="remove-machine">Remove</button>
+                  </div>
+                `;
+              }).join('')
+            : ''
+        }
+      </div>
+      <div>
+        <label>Job Status</label>
+        ${statusField}
+      </div>
+      <div>
+        <label>Completion Date</label>
+        <input type="date" id="completionDate" value="${job.completion_date || ''}" required>
+      </div>
+      <div>
+        <label>Checklist</label>
+        <div>
+          <input type="checkbox" id="checkScrews" ${job.checklist?.noMissingScrews ? 'checked' : ''}> No Missing Screws
+          <input type="checkbox" id="checkSoftwareUpdated" ${job.checklist?.softwareUpdated ? 'checked' : ''}> Software Updated
+          <input type="checkbox" id="checkTested" ${job.checklist?.tested ? 'checked' : ''}> Tested
+          <input type="checkbox" id="checkApproved" ${job.checklist?.approvedByManagement ? 'checked' : ''}> Approved by Management
+        </div>
+      </div>
+      <div>
+        <label>Signature</label>
+        <canvas id="signatureCanvas" width="400" height="150" style="border: 1px solid black;"></canvas>
+        <button type="button" id="clearSignature">Clear Signature</button>
+      </div>
+      <button type="submit">Save</button>
+    </form>
+    <button type="button" id="backToDashboard">Back to Dashboard</button>
+  </div>
+`;
+
 
     // Insert the update form into the DOM.
     const updateFormContainer = document.createElement('div');
@@ -321,7 +326,6 @@ export async function showUpdateJobForm(jobId) {
       }
     });
 
-    // Handle form submission: update the job via your API.
     document.getElementById('updateJobForm').addEventListener('submit', async e => {
       e.preventDefault();
       let newStatus = document.getElementById('jobStatus').value;
@@ -330,20 +334,28 @@ export async function showUpdateJobForm(jobId) {
         newStatus = 'Completed - Pending Approval';
         newContractorStatus = 'Completed';
       }
+      
+      // Collect updated note count along with other values.
+      const noteCount = document.getElementById('note_count').value;
+      
+      // Collect updated machine data as before.
       const updatedMachines = [...document.querySelectorAll('.machine-entry')].map(machine => ({
         id: machine.getAttribute('data-id'),
         name: machine.querySelector('strong').innerText,
         notes: machine.querySelector('.machine-notes').value,
         partsUsed: machine.querySelector('input.machine-parts').value,
       }));
+      
       const signatureData = signatureCanvas.toDataURL('image/png');
-
+    
+      // Build updated job data, now including note_count.
       const updatedJobData = {
         customer_name: document.getElementById('customerName').value.trim(),
         contact_name: document.getElementById('contactName').value.trim(),
         work_performed: document.getElementById('workPerformed').value.trim(),
         travel_time: document.getElementById('travelTime').value,
         labour_time: document.getElementById('labourTime').value,
+        note_count: document.getElementById('note_count').value,
         status: newStatus,
         contractor_status: newContractorStatus,
         completion_date: document.getElementById('completionDate').value,
@@ -356,11 +368,11 @@ export async function showUpdateJobForm(jobId) {
         signature: signatureData,
         machines: updatedMachines,
       };
-
+    
       try {
         // Merge updated data with the existing job object.
         const updatedJob = { ...job, ...updatedJobData };
-
+    
         // Send a PUT request to update the job via your API.
         const putResponse = await fetch(`${API_BASE_URL}/jobs/${job.id}`, {
           method: 'PUT',
@@ -368,7 +380,7 @@ export async function showUpdateJobForm(jobId) {
           body: JSON.stringify(updatedJob),
         });
         if (!putResponse.ok) throw new Error('Failed to update job.');
-
+    
         alert('Job updated successfully and submitted for admin approval.');
         updateFormContainer.remove();
         modalOverlay.remove();

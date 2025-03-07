@@ -73,16 +73,17 @@ app.get('/jobs/:id', async (req, res) => {
 
 app.post('/jobs', async (req, res) => {
   // Expect snake_case keys in the request body
-  const { customer_name, contact_name, work_performed, status = 'Pending' } = req.body;
+  const { work_order, customer_name, contractor, work_required, status = 'Pending' } = req.body;
   try {
-    const query = 'INSERT INTO jobs (customer_name, contact_name, work_performed, status) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.query(query, [customer_name, contact_name, work_performed, status]);
-    res.json({ id: result.insertId, customer_name, contact_name, work_performed, status });
+    const query = 'INSERT INTO jobs (work_order, customer_name, contractor, work_required, status) VALUES (?, ?, ?, ?, ?)';
+    const [result] = await pool.query(query, [work_order, customer_name, contractor, work_required, status]);
+    res.json({ id: result.insertId, work_order, customer_name, contractor, work_required, status });
   } catch (error) {
     console.error('Error inserting job:', error);
     res.status(500).json({ error: 'Database insert failed' });
   }
 });
+
 app.put('/jobs/:id', async (req, res) => {
   const { id } = req.params; // Extract ID from URL
   const { status, contractor_status, onsite_time, status_timestamp } = req.body;
