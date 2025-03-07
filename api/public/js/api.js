@@ -121,7 +121,7 @@ export async function refreshContractorView() {
     const allJobs = await response.json();
 
     // Log the entire data set for debugging
-    console.log('All jobs:', allJobs);
+    console.log("All jobs:", allJobs);
     allJobs.forEach(job => {
       console.log(
         `Job ID: ${job.id} | Role: ${job.role} | Assigned Contractor: ${job.assigned_contractor} | Assigned Tech: ${job.assigned_tech}`
@@ -131,39 +131,41 @@ export async function refreshContractorView() {
     if (!G.currentUser) {
       // If no user is logged in, no jobs
       G.jobs = [];
-    } else if (G.currentUserRole === 'admin') {
+    } else if (G.currentUserRole === "admin") {
       // Admin sees all jobs
       G.jobs = allJobs;
-    } else if (G.currentUserRole === 'contractor') {
-      // Filter for 'contractor' jobs and check assigned_contractor field
+    } else if (G.currentUserRole === "contractor") {
+      // Filter for contractor jobs using assigned_contractor field
+      const normalizedUserId = G.currentUser.id ? G.currentUser.id.trim() : "";
       G.jobs = allJobs.filter(job => {
         const normalizedRole = job.role.toLowerCase().trim();
-        const normalizedAssigned = job.assigned_contractor ? job.assigned_contractor.trim() : '';
-        const normalizedUserId = G.currentUser.id ? G.currentUser.id.trim() : '';
-        const roleMatch = normalizedRole === 'contractor';
+        const normalizedAssigned = job.assigned_contractor
+          ? job.assigned_contractor.trim()
+          : "";
+        const roleMatch = normalizedRole === "contractor";
         const idMatch = normalizedAssigned === normalizedUserId;
-        
         console.log(
           `Job ID: ${job.id} | roleMatch: ${roleMatch} | idMatch: ${idMatch} | ` +
-          `job.assigned_contractor: "${normalizedAssigned}" | G.currentUser.id: "${normalizedUserId}"`
+            `job.assigned_contractor: "${normalizedAssigned}" | G.currentUser.id: "${normalizedUserId}"`
         );
         return roleMatch && idMatch;
       });
-    } else if (G.currentUserRole === 'technician') {
-      // Filter for 'technician' jobs and check assigned_tech field
+    } else if (G.currentUserRole === "technician") {
+      // Filter for technician jobs using assigned_tech field
+      const normalizedUserId = G.currentUser.id ? G.currentUser.id.trim() : "";
       G.jobs = allJobs.filter(job =>
-        job.role.toLowerCase() === 'technician' &&
-        (job.assigned_tech) === (G.currentUser.id)
+        job.role.toLowerCase().trim() === "technician" &&
+        (job.assigned_tech ? job.assigned_tech.trim() : "") === normalizedUserId
       );
     } else {
-      // Fallback: if there's some unknown role, no jobs
+      // Fallback: if there's an unknown role, no jobs
       G.jobs = [];
     }
 
-    console.log('Job list filtered for role:', G.currentUserRole, G.jobs);
+    console.log("Job list filtered for role:", G.currentUserRole, G.jobs);
     showDashboard(G.currentUserRole);
   } catch (error) {
-    console.error('Error refreshing contractor/tech view:', error);
+    console.error("Error refreshing contractor/tech view:", error);
   }
 }
 
