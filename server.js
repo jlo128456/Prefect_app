@@ -82,17 +82,17 @@ app.get('/jobs/:id', async (req, res) => {
   
       const query = `
         INSERT INTO jobs 
-        (id, work_order, customer_name, contractor, role, work_required, work_performed, note_count, status) 
+        (id, work_order, customer_name, contractor, role, work_required, customer_address , note_count, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const [result] = await pool.query(query, [
         nextId,
         work_order, 
         customer_name, 
+        customer_address,
         contractor, 
         role.toLowerCase(),  // Ensure role is valid
         work_required, 
-        work_performed, 
         note_count, 
         status
       ]);
