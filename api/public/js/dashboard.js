@@ -67,13 +67,14 @@ export async function populateAdminJobs() {
     return;
   }
 
-  // 3) Render each job as a table row
+  // 3) Render each job as a table row, including work_required
   G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${job.work_order || 'N/A'}</td>
       <td>${job.customer_name || 'N/A'}</td>
       <td>${job.contractor || 'N/A'}</td>
+      <td>${job.work_required || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
       <td>${job.last_updated || ''}</td>
@@ -105,7 +106,7 @@ export async function populateAdminJobs() {
 }
 
 /** 
- * Initialize the Create Job modal logic + form submission 
+ * Initialize the Create Job modal logic and form submission 
  */
 function setupCreateJobModal() {
   const openModalBtn = document.getElementById("openCreateJobModal");
@@ -114,7 +115,7 @@ function setupCreateJobModal() {
   const modal = document.getElementById("createJobModal");
   const addJobForm = document.getElementById("admin-add-job-form");
 
-  // Show the modal
+  // Show the modal when "Create New Job" button is clicked
   openModalBtn.addEventListener("click", () => {
     console.log("Create New Job button clicked!");
     modal.style.display = "block";
@@ -133,17 +134,19 @@ function setupCreateJobModal() {
     addJobForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Collect form values
+      // Collect form values (including work_required)
       const workOrder = document.getElementById("work_order").value.trim();
       const customerName = document.getElementById("customer_name").value.trim();
       const contractor = document.getElementById("contractor").value.trim();
+      const workRequired = document.getElementById("work_required").value.trim();
       const role = document.getElementById("role").value;
 
-      // Build new job object
+      // Build new job object with work_required
       const newJob = {
         work_order: workOrder,
         customer_name: customerName,
         contractor,
+        work_required: workRequired,
         role,
         status: "Pending"
       };
@@ -169,7 +172,7 @@ function setupCreateJobModal() {
         // Refresh the table
         populateAdminJobs();
 
-        // Close the modal + clear form
+        // Close the modal and clear the form
         modal.style.display = "none";
         addJobForm.reset();
 

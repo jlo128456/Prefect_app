@@ -1,6 +1,5 @@
 import { G } from './globals.js';
 import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashboard } from './dashboard.js';
-import { loadData } from './api.js';
 
 // Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
@@ -82,7 +81,7 @@ export async function moveJobToInProgress(id) {
     alert(statusMessage);
 
     // Refresh UI
-    await loadData();
+
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
