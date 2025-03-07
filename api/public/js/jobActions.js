@@ -174,7 +174,8 @@ export async function showUpdateJobForm(id) {
             <label>Labour Time (hours)</label>
             <input type="number" id="labourTime" min="0" step="0.5" value="${job.labour_time || 0}" required>
           </div>
-          <label>Note Count (hours)</label>
+          <div>
+          <label>Note Count</label>
             <input type="number" id="note_count" value="${job.note_count || ''}" required>
           </div>
           <div>
