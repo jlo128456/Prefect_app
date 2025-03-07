@@ -2,7 +2,7 @@ import { G } from './globals.js';
 import { formatForDisplay, applyStatusColor } from './utils.js';
 import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
-import { moveJobToInProgress, showUpdateJobForm } from './jobActions.js';
+import { moveJobToInProgress, showUpdateJobForm, updateJobStatus, showAdminReviewModal } from './jobActions.js';
 
 /**
  * Show the appropriate dashboard (admin, contractor, or tech).
@@ -77,29 +77,43 @@ export async function populateAdminJobs() {
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
       <td>${job.last_updated || ''}</td>
-      <td>
-        <button class="approve-job" data-id="${job.id}">Approve</button>
-        <button class="reject-job" data-id="${job.id}">Reject</button>
-      </td>
-    `;
+      <td>${
+        job.status === "Completed - Pending Approval"
+          ? `<button class="review-job" data-id="${job.id}">Review</button>`
+          : ""
+      }
+      <button class="approve-job" data-id="${job.id}">Approve</button>
+      <button class="reject-job" data-id="${job.id}">Reject</button>
+    </td>
+  `;
     G.adminJobList.appendChild(row);
 
     // Apply color styling if desired
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
 
-  // 4) Approve/Reject event listeners
-  document.querySelectorAll(".approve-job").forEach((button) =>
-    button.addEventListener("click", (e) =>
-      updateJobStatus(e.target.dataset.id, "Approved")
-    )
+  //  Approve/Reject/Review event listeners
+  document.querySelectorAll(".review-job").forEach(btn =>
+    btn.addEventListener("click", e => {
+      const jobId = e.target.dataset.id;
+      showAdminReviewModal(jobId);
+    })
   );
-  document.querySelectorAll(".reject-job").forEach((button) =>
-    button.addEventListener("click", (e) =>
-      updateJobStatus(e.target.dataset.id, "Pending")
-    )
+  
+  document.querySelectorAll(".approve-job").forEach(btn =>
+    btn.addEventListener("click", e => {
+      const jobId = e.target.dataset.id;
+      updateJobStatus(jobId, "Approved");
+    })
   );
-
+  
+  document.querySelectorAll(".reject-job").forEach(btn =>
+    btn.addEventListener("click", e => {
+      const jobId = e.target.dataset.id;
+      updateJobStatus(jobId, "Rejected");
+    })
+  );
+  
   // 5) Setup the "Create New Job" modal logic (open/close) + form submission
   setupCreateJobModal();
 }
