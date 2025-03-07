@@ -72,6 +72,26 @@ app.get('/jobs/:id', async (req, res) => {
 });
 
 app.post('/jobs', async (req, res) => {
+  const { work_order, customer_name, customer_address, contractor, work_required, role } = req.body;
+
+  if (!work_order || !customer_name || !customer_address || !contractor || !work_required || !role) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const query = `INSERT INTO jobs (work_order, customer_name, customer_address, contractor, work_required, role) 
+                   VALUES (?, ?, ?, ?, ?, ?)`;
+    
+    const [result] = await pool.query(query, [work_order, customer_name, customer_address, contractor, work_required, role]);
+
+    res.status(201).json({ id: result.insertId, message: 'Job created successfully' });
+  } catch (error) {
+    console.error('Error inserting job:', error.message);
+    res.status(500).json({ error: 'Database insert failed' });
+  }
+});
+
+app.post('/jobs', async (req, res) => {
   const { customer_name, contact_name, work_performed, status = 'Pending' } = req.body;
   console.log('Received Data:', req.body); // Debugging
 
