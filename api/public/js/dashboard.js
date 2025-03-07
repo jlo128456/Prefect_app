@@ -313,7 +313,7 @@ export function populateTechJobs(Techid) {
     return;
   }
 
-  const techJobs = G.jobs.filter(job => job.assigned_tech === id);
+  const techJobs = G.jobs.filter(job => job.assigned_tech === Techid);
   if (techJobs.length === 0) {
     G.techJobList.innerHTML = `<tr><td colspan="7">No jobs found for this technician.</td></tr>`;
     return;
