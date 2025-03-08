@@ -85,6 +85,7 @@ export async function populateAdminJobs() {
       }
       </td>
     `;
+
     G.adminJobList.appendChild(row);
 
     // Apply color styling if desired
@@ -173,7 +174,7 @@ function setupModals() {
     });
   });
 
-  //  Handle "Create Job" form submission
+  // ✅ Handle "Create Job" form submission
   if (addJobForm && !addJobForm.dataset.listenerAttached) {
     addJobForm.addEventListener("submit", async (e) => {
       e.preventDefault();
