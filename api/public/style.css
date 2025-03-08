@@ -18,49 +18,43 @@ body {
 }
 
 /* ======================= */
-/* Modal Overlay - Center Modal & Hide Dashboard */
+/* Modal Styling */
 /* ======================= */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
-  z-index: 1000; /* Ensure modal is on top */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Center both modals */
-#createJobModal, #updateJobContainer {
+#updateJobContainer, #createJobModal {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* Center modal */
+  transform: translate(-50%, -50%);
   background: white;
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   width: 450px;
   max-width: 90%;
-  max-height: 80vh; /* Ensure it does not exceed viewport */
-  overflow-y: auto; /* Enable scrolling if content overflows */
-  z-index: 1001; /* Ensure it appears on top */
-  display: none; /* Initially hidden */
+  max-height: 80vh; /* Prevent it from being too large */
+  overflow-y: auto; /* Enable scrolling if needed */
+  display: none; /* Start hidden */
+  z-index: 1000;
 }
 
-/* Hide dashboard when modal is open */
-.hidden {
-  display: none !important;
+/* Ensure modal is visible when opened */
+.modal-open {
+  overflow: hidden; /* Prevent scrolling */
 }
 
-/* Prevent scrolling when modal is open */
-body.modal-open {
-  overflow: hidden;
+/* Ensure background overlay is covering everything */
+#modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 
 /* ======================= */
 /* Modal Header & Close Button */

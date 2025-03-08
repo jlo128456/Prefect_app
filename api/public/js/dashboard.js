@@ -58,16 +58,12 @@ export async function populateAdminJobs() {
   // Clear out existing rows first
   G.adminJobList.innerHTML = "";
 
-  // If needed, fetch latest jobs from server:
-  // const jobs = await fetch(`${API_BASE_URL}/api/jobs`).then(res => res.json());
-  // G.jobs = jobs;
-
   if (!Array.isArray(G.jobs)) {
     console.error("G.jobs is not an array. Current value:", G.jobs);
     return;
   }
 
-  // Render each job as a table row, including work_required
+  // Render each job as a table row
   G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -76,8 +72,7 @@ export async function populateAdminJobs() {
       <td>${job.contractor || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
-      <td class="last-updated">${formatForDisplay(job.last_updated) || ''}</td>
-      <td class="logged-time">${job.logged_time ? formatForDisplay(job.logged_time) : "Not Logged"}</td>
+      <td class="last-updated">${job.lastUpdated ? formatForDisplay(job.lastUpdated) : 'Not Updated'}</td>
       <td>${
         job.status === "Completed - Pending Approval"
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
@@ -88,35 +83,39 @@ export async function populateAdminJobs() {
 
     G.adminJobList.appendChild(row);
 
-    // Apply color styling if desired
+    // Apply color styling
     applyStatusColor(row.querySelector(".status-cell"), job.status);
   });
 
-  //  Approve/Reject/Review event listeners
+  // ✅ Ensure correct event listeners for buttons
   document.querySelectorAll(".review-job").forEach(btn =>
     btn.addEventListener("click", e => {
       const jobId = e.target.dataset.id;
       showAdminReviewModal(jobId);
     })
   );
-  
+
   document.querySelectorAll(".approve-job").forEach(btn =>
     btn.addEventListener("click", e => {
       const jobId = e.target.dataset.id;
       updateJobStatus(jobId, "Approved");
     })
   );
-  
+
   document.querySelectorAll(".reject-job").forEach(btn =>
     btn.addEventListener("click", e => {
       const jobId = e.target.dataset.id;
       updateJobStatus(jobId, "Rejected");
     })
   );
-  
-  //Setup the "Create New Job" modal logic (open/close) + form submission
-  setupCreateJobModal();
+
+  // ✅ Setup the "Create New Job" modal only once
+  if (!G.modalInitialized) {
+    setupCreateJobModal();
+    G.modalInitialized = true;
+  }
 }
+
 
 /** 
  * Initialize the Create Job modal logic and form submission 

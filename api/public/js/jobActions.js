@@ -157,12 +157,12 @@ export async function moveJobToInProgress(id) {
     alert("Failed to update job status.");
   }
 }
-//function to get local time in yyy-mm-dd hh:mm:ss format for mysql
 function getLocalMySQLTime() {
   const now = new Date();
 
+  // Convert to the user's local time and format correctly
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0"); // Month is 0-based
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-based
   const day = String(now.getDate()).padStart(2, "0");
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
@@ -172,22 +172,23 @@ function getLocalMySQLTime() {
 }
 
 
+
 export async function updateJobStatus(id, newStatus) {
   try {
-    const nowMySQL = getLocalMySQLTime(); // Get local time in MySQL format
+    const nowLocalMySQL = getLocalMySQLTime(); //  Get local time in MySQL format
 
-    // Fetch existing job details to retain `logged_time` if already set
+    // Fetch existing job details
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
     const jobData = await jobResponse.json();
 
     const updateData = {
       status: newStatus,
-      lastUpdated: nowMySQL, // Always update lastUpdated
+      lastUpdated: nowLocalMySQL, // Always update `lastUpdated`
     };
 
-    // Only set `logged_time` if moving to "In Progress" and not already set
+    //  Only set `logged_time` if moving to "In Progress" and it's not already set
     if (newStatus === "In Progress" && !jobData.logged_time) {
-      updateData.logged_time = nowMySQL;
+      updateData.logged_time = nowLocalMySQL;
     }
 
     const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
@@ -202,7 +203,7 @@ export async function updateJobStatus(id, newStatus) {
 
     alert(`Job status updated to: ${newStatus}`);
 
-    //Refresh Admin & Contractor/Technician Views
+    //  Refresh Admin & Contractor Views
     populateAdminJobs();
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
