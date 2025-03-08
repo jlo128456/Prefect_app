@@ -4,9 +4,9 @@
 body {
   background-image: url('./img/mound2.png'); /* Background image */
   background-repeat: no-repeat;
-  background-size: cover; /* Ensure the image covers the entire screen */
-  background-attachment: fixed; /* Fixed background */
-  background-position: center; /* Keep the image centered */
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@ body {
 }
 
 /* ======================= */
-/* Modal Styling */
+/* Modal Overlay Fix */
 /* ======================= */
 #modalOverlay {
   position: fixed;
@@ -26,25 +26,31 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
   z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* ======================= */
+/* Modal Container Fix */
+/* ======================= */
 #updateJobContainer {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
+  position: relative;
   background: white;
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   width: 450px;
   max-width: 90%;
-  overflow: hidden;
+  max-height: 80vh; /* Ensure it does not exceed the viewport */
+  overflow-y: auto; /* Enable scrolling if content overflows */
 }
 
+/* ======================= */
+/* Modal Header & Close Button */
+/* ======================= */
 #updateJobContainer h3 {
   text-align: center;
   margin-bottom: 15px;
@@ -100,21 +106,20 @@ textarea {
 /* Button Styling */
 /* ======================= */
 button {
-  width: 100%;
-  padding: 10px;
+  width: auto; /* Adjust width based on content */
+  padding: 5px 10px; /* Reduce padding */
+  font-size: 0.9em; /* Slightly smaller text */
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 1em;
   transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #0056b3;
 }
-
 #backToDashboard {
   background-color: #6c757d;
 }
