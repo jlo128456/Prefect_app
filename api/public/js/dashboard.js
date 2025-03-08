@@ -76,14 +76,15 @@ export async function populateAdminJobs() {
       <td>${job.contractor || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
-      <td>${job.last_updated || ''}</td>
+      <td class="last-updated">${formatToDisplay(job.last_updated) || ''}</td>
+      <td class="logged-time">${job.logged_time ? formatToDisplay(job.logged_time) : "Not Logged"}</td>
       <td>${
         job.status === "Completed - Pending Approval"
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
           : ""
       }
-          </td>
-  `;
+      </td>
+    `;
     G.adminJobList.appendChild(row);
 
     // Apply color styling if desired
