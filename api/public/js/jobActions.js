@@ -160,17 +160,27 @@ export async function moveJobToInProgress(id) {
 
 export async function updateJobStatus(id, newStatus) {
   try {
+    const now = new Date().toISOString().slice(0, 19).replace("T", " "); // Format: YYYY-MM-DD HH:MM:SS
+    const updateData = { status: newStatus, lastUpdated: now };
+
+    // If status is "In Progress", also update loggedTime
+    if (newStatus === "In Progress") {
+      updateData.loggedTime = now;
+    }
+
     const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify(updateData),
     });
+
     if (!response.ok) {
       throw new Error("Failed to update job status.");
     }
-    // Optionally parse the response
+
     alert(`Job status updated to: ${newStatus}`);
-    // Refresh the UI
+
+    // Refresh UI with formatted dates
     populateAdminJobs();
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
