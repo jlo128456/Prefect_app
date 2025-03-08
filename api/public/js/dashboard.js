@@ -55,10 +55,10 @@ export function showDashboard(role) {
  * Populate Admin Dashboard (renders table + sets up the modal form).
  */
 export async function populateAdminJobs() {
-  // 1) Clear out existing rows first
+  // Clear out existing rows first
   G.adminJobList.innerHTML = "";
 
-  // 2) If needed, fetch latest jobs from server:
+  // If needed, fetch latest jobs from server:
   // const jobs = await fetch(`${API_BASE_URL}/api/jobs`).then(res => res.json());
   // G.jobs = jobs;
 
@@ -67,7 +67,7 @@ export async function populateAdminJobs() {
     return;
   }
 
-  // 3) Render each job as a table row, including work_required
+  // Render each job as a table row, including work_required
   G.jobs.forEach((job) => {
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -114,7 +114,7 @@ export async function populateAdminJobs() {
     })
   );
   
-  // 5) Setup the "Create New Job" modal logic (open/close) + form submission
+  //Setup the "Create New Job" modal logic (open/close) + form submission
   setupCreateJobModal();
 }
 
