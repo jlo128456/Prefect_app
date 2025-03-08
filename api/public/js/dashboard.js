@@ -120,33 +120,65 @@ export async function populateAdminJobs() {
 /** 
  * Initialize the Create Job modal logic and form submission 
  */
-function setupCreateJobModal() {
-  const openModalBtn = document.getElementById("openCreateJobModal");
-  const closeOverlay = document.getElementById("closeModalOverlay");
-  const closeBtn = document.getElementById("closeCreateJobModal");
-  const modal = document.getElementById("createJobModal");
+function setupModals() {
+  const openCreateModalBtn = document.getElementById("openCreateJobModal");
+  const openUpdateModalBtns = document.querySelectorAll(".edit-job"); // Edit job buttons
+  const closeOverlays = document.querySelectorAll(".closeModalOverlay");
+  const closeBtns = document.querySelectorAll(".closeModal");
+  const createModal = document.getElementById("createJobModal");
+  const updateModal = document.getElementById("updateJobContainer");
+  const dashboard = document.getElementById("adminJobsTable");
   const addJobForm = document.getElementById("admin-add-job-form");
 
-  // Show the modal when "Create New Job" button is clicked
-  openModalBtn.addEventListener("click", () => {
-    console.log("Create New Job button clicked!");
-    modal.style.display = "block";
+  // Function to open a modal and hide the dashboard
+  function openModal(modal) {
+    modal.style.display = "flex"; // Show modal
+    dashboard.classList.add("hidden"); // Hide dashboard
+    document.body.classList.add("modal-open"); // Disable scrolling
+  }
+
+  // Function to close a modal and restore the dashboard
+  function closeModal(modal) {
+    modal.style.display = "none";
+    dashboard.classList.remove("hidden"); // Show dashboard again
+    document.body.classList.remove("modal-open"); // Enable scrolling
+  }
+
+  // Show "Create Job" modal
+  if (openCreateModalBtn) {
+    openCreateModalBtn.addEventListener("click", () => openModal(createModal));
+  }
+
+  // Show "Update Job" modal
+  openUpdateModalBtns.forEach(button => {
+    button.addEventListener("click", function () {
+      openModal(updateModal);
+      const jobId = this.dataset.id;
+      loadJobDetails(jobId); // Function to populate modal with job data
+    });
   });
 
-  // Hide the modal if user clicks the overlay or the close button
-  closeOverlay.addEventListener("click", () => {
-    modal.style.display = "none";
-  });
-  closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
+  // Close modals when clicking overlay or close button
+  closeOverlays.forEach(overlay => {
+    overlay.addEventListener("click", () => {
+      closeModal(createModal);
+      closeModal(updateModal);
+    });
   });
 
-  // Attach form submit (only once)
-  if (!addJobForm.dataset.listenerAttached) {
+  closeBtns.forEach(button => {
+    button.addEventListener("click", () => {
+      closeModal(createModal);
+      closeModal(updateModal);
+    });
+  });
+
+  //  Handle "Create Job" form submission
+  if (addJobForm && !addJobForm.dataset.listenerAttached) {
     addJobForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Collect form values (including work_required)
+      // Collect form values
       const workOrder = document.getElementById("work_order").value.trim();
       const customerName = document.getElementById("customer_name").value.trim();
       const customerAddress = document.getElementById("customer_address").value.trim();
@@ -154,7 +186,7 @@ function setupCreateJobModal() {
       const workRequired = document.getElementById("work_required").value.trim();
       const role = document.getElementById("role").value;
 
-      // Build new job object with work_required
+      // Build new job object
       const newJob = {
         work_order: workOrder,
         customer_name: customerName,
@@ -176,17 +208,17 @@ function setupCreateJobModal() {
           throw new Error(`Error creating job: ${response.status}`);
         }
 
-        // Returned newly inserted job from MySQL (including new ID)
+        // Returned newly inserted job
         const createdJob = await response.json();
 
-        // Add to our local array
+        // Add to local array
         G.jobs.push(createdJob);
 
         // Refresh the table
         populateAdminJobs();
 
         // Close the modal and clear the form
-        modal.style.display = "none";
+        closeModal(createModal);
         addJobForm.reset();
 
       } catch (err) {
@@ -195,9 +227,13 @@ function setupCreateJobModal() {
       }
     });
 
-    addJobForm.dataset.listenerAttached = "true";
+    addJobForm.dataset.listenerAttached = "true"; // Prevent duplicate listeners
   }
 }
+
+// Run the setup function after the DOM is loaded
+document.addEventListener("DOMContentLoaded", setupModals);
+
 /**
  * Populate Contractor Dashboard.
  */
