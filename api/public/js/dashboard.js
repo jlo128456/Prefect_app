@@ -121,58 +121,47 @@ export async function populateAdminJobs() {
 /** 
  * Initialize the Create Job modal logic and form submission 
  */
-function setupModals() {
-  const openCreateModalBtn = document.getElementById("openCreateJobModal");
-  const openUpdateModalBtns = document.querySelectorAll(".edit-job"); // Edit job buttons
-  const closeOverlays = document.querySelectorAll(".closeModalOverlay");
-  const closeBtns = document.querySelectorAll(".closeModal");
-  const createModal = document.getElementById("createJobModal");
-  const updateModal = document.getElementById("updateJobContainer");
+function setupCreateJobModal() {
+  const openModalBtn = document.getElementById("openCreateJobModal");
+  const closeOverlay = document.getElementById("closeCreateModalOverlay");
+  const closeBtn = document.getElementById("closeCreateJobModal");
+  const modal = document.getElementById("createJobModal");
   const dashboard = document.getElementById("adminJobsTable");
   const addJobForm = document.getElementById("admin-add-job-form");
 
-  // Function to open a modal and hide the dashboard
-  function openModal(modal) {
+  // Function to open the modal and hide the dashboard
+  function openModal() {
+    if (!modal) {
+      console.error("Create Job Modal not found!");
+      return;
+    }
+
     modal.style.display = "flex"; // Show modal
-    dashboard.classList.add("hidden"); // Hide dashboard
+    if (dashboard) dashboard.classList.add("hidden"); // Hide dashboard
     document.body.classList.add("modal-open"); // Disable scrolling
   }
 
-  // Function to close a modal and restore the dashboard
-  function closeModal(modal) {
+  // Function to close the modal and restore the dashboard
+  function closeModal() {
     modal.style.display = "none";
-    dashboard.classList.remove("hidden"); // Show dashboard again
+    if (dashboard) dashboard.classList.remove("hidden"); // Show dashboard again
     document.body.classList.remove("modal-open"); // Enable scrolling
   }
 
-  // Show "Create Job" modal
-  if (openCreateModalBtn) {
-    openCreateModalBtn.addEventListener("click", () => openModal(createModal));
+  // Show modal when "Create New Job" button is clicked
+  if (openModalBtn) {
+    openModalBtn.addEventListener("click", openModal);
+  } else {
+    console.warn("Create Job button not found!");
   }
 
-  // Show "Update Job" modal
-  openUpdateModalBtns.forEach(button => {
-    button.addEventListener("click", function () {
-      openModal(updateModal);
-      const jobId = this.dataset.id;
-      loadJobDetails(jobId); // Function to populate modal with job data
-    });
-  });
-
-  // Close modals when clicking overlay or close button
-  closeOverlays.forEach(overlay => {
-    overlay.addEventListener("click", () => {
-      closeModal(createModal);
-      closeModal(updateModal);
-    });
-  });
-
-  closeBtns.forEach(button => {
-    button.addEventListener("click", () => {
-      closeModal(createModal);
-      closeModal(updateModal);
-    });
-  });
+  // Hide modal when clicking overlay or pressing close button
+  if (closeOverlay) {
+    closeOverlay.addEventListener("click", closeModal);
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeModal);
+  }
 
   //  Handle "Create Job" form submission
   if (addJobForm && !addJobForm.dataset.listenerAttached) {
@@ -219,7 +208,7 @@ function setupModals() {
         populateAdminJobs();
 
         // Close the modal and clear the form
-        closeModal(createModal);
+        closeModal();
         addJobForm.reset();
 
       } catch (err) {
@@ -232,8 +221,58 @@ function setupModals() {
   }
 }
 
-// Run the setup function after the DOM is loaded
-document.addEventListener("DOMContentLoaded", setupModals);
+//  Call `setupCreateJobModal()` when the page loads
+document.addEventListener("DOMContentLoaded", setupCreateJobModal);
+//SEt updatejobmodal
+function setupUpdateJobModal() {
+  const openUpdateModalBtns = document.querySelectorAll(".edit-job"); // Edit job buttons
+  const closeOverlay = document.getElementById("closeUpdateModalOverlay");
+  const closeBtn = document.getElementById("closeUpdateJobModal");
+  const modal = document.getElementById("updateJobContainer");
+  const dashboard = document.getElementById("adminJobsTable");
+
+  // Function to open the modal and hide the dashboard
+  function openModal(jobId) {
+    if (!modal) {
+      console.error("Update Job Modal not found!");
+      return;
+    }
+
+    modal.style.display = "flex"; // Show modal
+    if (dashboard) dashboard.classList.add("hidden"); // Hide dashboard
+    document.body.classList.add("modal-open"); // Disable scrolling
+
+    // Load job details into the modal
+    loadJobDetails(jobId);
+  }
+
+  // Function to close the modal and restore the dashboard
+  function closeModal() {
+    modal.style.display = "none";
+    if (dashboard) dashboard.classList.remove("hidden"); // Show dashboard again
+    document.body.classList.remove("modal-open"); // Enable scrolling
+  }
+
+  // Show modal when "Edit Job" button is clicked
+  openUpdateModalBtns.forEach(button => {
+    button.addEventListener("click", function () {
+      const jobId = this.dataset.id;
+      openModal(jobId);
+    });
+  });
+
+  // Hide modal when clicking overlay or pressing close button
+  if (closeOverlay) {
+    closeOverlay.addEventListener("click", closeModal);
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeModal);
+  }
+}
+
+// Call `setupUpdateJobModal()` when the page loads
+document.addEventListener("DOMContentLoaded", setupUpdateJobModal);
+
 
 /**
  * Populate Contractor Dashboard.
