@@ -76,8 +76,8 @@ export async function populateAdminJobs() {
       <td>${job.contractor || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
-      <td class="last-updated">${formatToDisplay(job.last_updated) || ''}</td>
-      <td class="logged-time">${job.logged_time ? formatToDisplay(job.logged_time) : "Not Logged"}</td>
+      <td class="last-updated">${formatForDisplay(job.last_updated) || ''}</td>
+      <td class="logged-time">${job.logged_time ? formatForDisplay(job.logged_time) : "Not Logged"}</td>
       <td>${
         job.status === "Completed - Pending Approval"
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
@@ -174,7 +174,7 @@ function setupModals() {
     });
   });
 
-  // ✅ Handle "Create Job" form submission
+  //  Handle "Create Job" form submission
   if (addJobForm && !addJobForm.dataset.listenerAttached) {
     addJobForm.addEventListener("submit", async (e) => {
       e.preventDefault();
