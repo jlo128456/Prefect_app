@@ -1,357 +1,330 @@
+/* ======================= */
 /* General Body Styling */
+/* ======================= */
 body {
-    background-image: url('./img/mound2.png'); /* Background image */
-    background-repeat: no-repeat;
-    background-size: cover; /* Ensure the image covers the entire screen */
-    background-attachment: fixed; /* Optional: Makes the background fixed while scrolling */
-    background-position: center; /* Keep the image centred */
-    margin: 0; /* Remove default margins */
-    padding: 0; /* Remove default padding */
-    font-family: Arial, sans-serif; /* Set default font */
-    min-height: 100vh; /* Ensure the content spans full height of the viewport */
-    display: flex; /* Flexbox layout */
-    flex-direction: column; /* Column layout */
-    align-items: center; /* Center horizontally */
-    justify-content: space-between; /* Spread content vertically */
+  background-image: url('./img/mound2.png'); /* Background image */
+  background-repeat: no-repeat;
+  background-size: cover; /* Ensure the image covers the entire screen */
+  background-attachment: fixed; /* Fixed background */
+  background-position: center; /* Keep the image centered */
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
+/* ======================= */
+/* Modal Styling */
+/* ======================= */
 #modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Increase transparency for better contrast */
-    z-index: 999;
-  }
-  
-  #updateJobContainer {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    background: white;
-    padding: 20px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow for emphasis */
-    border-radius: 10px;
-    width: 450px; /* Consistent width */
-    max-width: 90%;
-    overflow: hidden;
-  }
-  
-  #updateJobContainer h3 {
-    text-align: center;
-    margin-bottom: 15px;
-  }
-  
-  #updateJobContainer button {
-    display: block;
-    width: 100%;
-    margin-top: 10px;
-  }
-  
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+}
+
+#updateJobContainer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  width: 450px;
+  max-width: 90%;
+  overflow: hidden;
+}
+
+#updateJobContainer h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ======================= */
+/* Form Styling */
+/* ======================= */
+form {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-row label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* ======================= */
+/* Button Styling */
+/* ======================= */
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#backToDashboard {
+  background-color: #6c757d;
+}
+
+#backToDashboard:hover {
+  background-color: #545b62;
+}
+
+/* ======================= */
+/* Machine List Styling */
+/* ======================= */
+.machine-entry {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.remove-machine {
+  background-color: #dc3545;
+  color: white;
+  width: auto;
+  margin-top: 5px;
+}
+
+.remove-machine:hover {
+  background-color: #b02a37;
+}
+
+/* ======================= */
+/* Signature Canvas */
+/* ======================= */
+#signatureCanvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+#clearSignature {
+  margin-top: 10px;
+  display: block;
+}
+
+/* ======================= */
 /* Header Styling */
+/* ======================= */
 header {
-    color: black; /* Black text */
-    padding: 1.5rem 0; /* Vertical padding */
-    text-align: center; /* Center-align text */
-    width: 100%; /* Full width */
-    }
+  color: black;
+  padding: 1.5rem 0;
+  text-align: center;
+  width: 100%;
+}
 
 header h1 {
-    font-size: 2.5rem; /* Large title font size */
-    margin: 0.5rem 0; /* Add space around text */
+  font-size: 2.5rem;
+  margin: 0.5rem 0;
 }
 
 header p {
-    font-size: 1.1rem; /* Smaller subtitle */
-    margin: 0; /* Remove extra space */
+  font-size: 1.1rem;
+  margin: 0;
 }
 
+/* ======================= */
 /* Main Content Styling */
+/* ======================= */
 main {
-    width: 100%; /* Full width */
-    max-width: 800px; /* Restrict maximum width */
-    display: flex; /* Flexbox layout */
-    flex-direction: column; /* Stack elements vertically */
-    align-items: center; /* Center horizontally */
-    justify-content: center; /* Center vertically */
-    padding: 20px;
-    gap: 20px; /* Add spacing between sections */
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 20px;
 }
 
-/* Login Form Styling */
-form {
-    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
-    padding: 20px; /* Space inside form */
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
-    max-width: 400px; /* Maximum width for form */
-    width: 100%; /* Full width for responsiveness */
-    margin-bottom: 30px; /* Add space below form */
-}
-
-form .form-control {
-    border: 1px solid #ccc; /* Light grey border */
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px; /* Inner spacing */
-    margin-bottom: 15px; /* Space between fields */
-    font-size: 1rem; /* Standard font size */
-}
-
-/* Button Styling */
-form button {
-    background-color: #007bff; /* Blue button */
-    color: white; /* White text */
-    border: none; /* Remove border */
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px; /* Padding inside button */
-    font-size: 1rem; /* Standard font size */
-    width: 100%; /* Full width button */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s ease; /* Smooth hover transition */
-}
-
-form button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-}
-.form-check {
-    margin-bottom: 10px; /* Add spacing between each checklist item */
-  }
-  
-  .form-check-input {
-    margin-right: 10px; /* Add spacing between checkbox and label */
-  }
-
-/* Ensure the canvas aligns with the form fields */
-#signatureCanvas {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    margin-top: 0.5rem;
-  }
-  
-  /* Center the 'Clear Signature' button */
-  #clearSignature {
-    margin-top: 10px;
-    display: block;
-  }  
-
-/* Dashboard Section Styling */
+/* ======================= */
+/* Dashboard Styling */
+/* ======================= */
 #adminView, #contractorView, #techView {
-    display: none; /* Hide by default */
-    flex-direction: column; /* Stack sections vertically */
-    align-items: center; /* Center-align content */
-    text-align: left; /* Align text to the left */
-    width: 100%;
-    max-width: 800px; /* Restrict maximum width */
-    padding: 20px;
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-    gap: 20px; /* Space between elements inside */
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  gap: 20px;
 }
 
+/* ======================= */
 /* Table Styling */
+/* ======================= */
 .table-responsive {
-    width: 100%;
-    overflow-x: auto; /* Enable horizontal scrolling for tables */
+  width: 100%;
+  overflow-x: auto;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse; /* Remove default spacing */
-    margin-top: 10px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
 
 table th, table td {
-    border: 1px solid #ccc; /* Light grey border */
-    padding: 10px;
-    text-align: left; /* Left-align table text */
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
 }
 
 table th {
-    background-color: #f8f9fa; /* Light grey background for header */
-    font-weight: bold;
+  background-color: #f8f9fa;
+  font-weight: bold;
 }
 
+/* ======================= */
 /* Footer Styling */
+/* ======================= */
 footer {
-    text-align: center; /* Center-align text and logo */
-    padding: 20rem 0; /* Vertical padding */
-    width: 100%; /* Full width */
-    font-size: 0.9rem; /* Smaller text size */
-    color: #6c757d; /* Muted grey text */
-    margin-top: auto; /* Push footer to the bottom */
+  text-align: center;
+  padding: 20rem 0;
+  width: 100%;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-top: auto;
 }
 
 footer p {
-    margin: 0; /* Remove extra spacing */
+  margin: 0;
 }
 
-/* Footer Logo Styling */
+/* Footer Logo */
 .footer-logo {
-    display: block; /* Ensure the image is treated as a block element */
-    margin: 10px auto 0; /* Center it horizontally and add spacing above */
-    max-width: 50px; /* Adjust size as necessary */
-    height: auto; /* Maintain aspect ratio */
+  display: block;
+  margin: 10px auto 0;
+  max-width: 50px;
+  height: auto;
 }
-.form-horizontal .form-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .form-horizontal .form-group label {
-    text-align: right;
-    margin-bottom: 0;
-    padding-right: 10px;
-    flex: 0 0 25%; /* Adjust the label width */
-  }
-  
-  .form-horizontal .form-group .col-sm-9 {
-    flex: 1;
-  }
-  
-  .form-horizontal .form-control {
-    width: 100%;
-  }
-  
-  .text-center {
-    text-align: center;
-  }
 
-/* The overall modal container (covers the screen) */
-.modal {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%;
-    background: rgba(0,0,0,0.5); /* semi-transparent overlay */
-    z-index: 9999;
-    display: none; /* hide by default */
-  }
-  
-  /* The overlay area behind the modal content so clicking it can close */
-  .modal-overlay {
-    position: absolute;
-    top: 0; 
-    left: 0;
-    width: 100%; 
-    height: 100%;
-  }
-  
-  /* The actual white box containing the form and close button */
-  .modal-content {
-    position: relative;
-    background: #fff;
-    width: 500px;              /* fixed width for the modal */
-    padding: 20px 30px;        /* nice padding around content */
-    margin: 100px auto;        /* centers horizontally */
-    border-radius: 6px;        /* slightly rounded corners */
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  }
-  
-  /* The close (X) button in top-right corner */
-  .close-button {
-    position: absolute;
-    top: 12px; 
-    right: 16px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  /* The form row to stack label above the input */
-  .form-row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1rem;
-  }
-  
-  /* Labels have a bit of spacing below them */
-  .form-row label {
-    margin-bottom: 6px;
-    font-weight: bold;
-  }
-  
-  /* Inputs/selects fill the container width */
-  .form-row input,
-  .form-row select {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box; /* ensures padding doesn't exceed width */
-  }
-  
-  /* The form's submit button with some styling */
-  #admin-add-job-form button[type="submit"] {
-    background: #007bff; 
-    color: #fff; 
-    padding: 10px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  #admin-add-job-form button[type="submit"]:hover {
-    background: #0056b3; /* darker on hover */
-  }
-  
-
-/* Responsive Design for Mobile Screens */
+/* ======================= */
+/* Responsive Design */
+/* ======================= */
 @media (max-width: 600px) {
-    header h1 {
-        font-size: 1.8rem; /* Smaller font size for title */
-    }
+  body {
+      background-size: contain;
+      background-position: center;
+  }
 
-    header p {
-        font-size: 1rem; /* Adjust subtitle font size */
-    }
+  #updateJobContainer {
+      width: 90%;
+      padding: 15px;
+  }
 
-    form {
-        max-width: 90%; /* Use most of the screen width */
-        padding: 15px; /* Reduce padding */
-    }
+  h3 {
+      font-size: 1.2rem;
+  }
 
-    footer {
-        font-size: 0.8rem; /* Adjust footer text size */
-    }
+  button {
+      font-size: 0.9rem;
+  }
 
-    #adminView, #contractorView {
-        padding: 15px; /* Reduce padding for smaller screens */
-        max-width: 100%; /* Full width for small devices */
-    }
+  header h1 {
+      font-size: 1.8rem;
+  }
 
-    table th, table td {
-        font-size: 0.9rem; /* Adjust table font size */
-    }
+  header p {
+      font-size: 1rem;
+  }
+
+  form {
+      max-width: 90%;
+      padding: 15px;
+  }
+
+  footer {
+      font-size: 0.8rem;
+  }
+
+  #adminView, #contractorView {
+      padding: 15px;
+      max-width: 100%;
+  }
+
+  table th, table td {
+      font-size: 0.9rem;
+  }
 }
+
 /* Adjust Background for Smaller Screens */
 @media (max-width: 1200px) {
-    body {
-        background-size: contain; /* Switch to contain for smaller screens */
-        background-position: center top; /* Focus on the top */
-    }
+  body {
+      background-size: contain;
+      background-position: center top;
+  }
 }
 
 @media (max-width: 800px) {
-    body {
-        background-size: contain; /* Keep the image within bounds */
-        background-position: top center; /* Ensure visibility of important parts */
-    }
+  body {
+      background-size: contain;
+      background-position: top center;
+  }
 }
 
-@media (max-width: 600px) {
-    body {
-        background-size: contain; /* Ensure it fits within the smallest screens */
-        background-position: center; /* Keep it centered */
-    }
-}
-/* Adjust for smaller screens */
 @media (max-width: 768px) {
-    body {
-        background-size: contain; /* Adjust the size for smaller screens */
-        background-position: top; /* Align to the top for mobile */
-    }
+  body {
+      background-size: contain;
+      background-position: top;
+  }
 }
