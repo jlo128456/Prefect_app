@@ -161,10 +161,18 @@ export async function moveJobToInProgress(id) {
 export async function updateJobStatus(id, newStatus) {
   try {
     const now = new Date().toISOString().slice(0, 19).replace("T", " "); // Format: YYYY-MM-DD HH:MM:SS
-    const updateData = { status: newStatus, lastUpdated: now };
 
-    // If status is "In Progress", also update loggedTime
-    if (newStatus === "In Progress") {
+    // Fetch existing job details to retain loggedTime if already set
+    const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
+    const jobData = await jobResponse.json();
+
+    const updateData = {
+      status: newStatus,
+      lastUpdated: now, // Always update lastUpdated
+    };
+
+    // Only set `loggedTime` if status is being moved to "In Progress"
+    if (newStatus === "In Progress" && !jobData.loggedTime) {
       updateData.loggedTime = now;
     }
 
@@ -180,10 +188,11 @@ export async function updateJobStatus(id, newStatus) {
 
     alert(`Job status updated to: ${newStatus}`);
 
-    // Refresh UI with formatted dates
+    // Refresh Admin & Contractor/Technician Views
     populateAdminJobs();
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
+
   } catch (error) {
     console.error("updateJobStatus error:", error);
     alert("Could not update job status. Check console for details.");
