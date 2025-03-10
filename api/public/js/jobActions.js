@@ -4,9 +4,6 @@ import { populateAdminJobs, populateContractorJobs, populateTechJobs, showDashbo
 // Base URL for your backend API on Render
 const API_BASE_URL = 'https://prefect-app.onrender.com';
 
-/**
- * Show Admin Review Modal (Approve or Reject)
- */
 export async function showAdminReviewModal(id) {
   try {
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
@@ -23,22 +20,29 @@ export async function showAdminReviewModal(id) {
     const modal = document.createElement("div");
     modal.id = "adminReviewModal";
     modal.classList.add("modal");
-
-    // Make it fullscreen + centered with overlay
-    modal.style.display = "flex";
-    modal.style.alignItems = "center";
-    modal.style.justifyContent = "center";
+    modal.style.display = "block";
     modal.style.position = "fixed";
     modal.style.top = "0";
     modal.style.left = "0";
     modal.style.width = "100%";
     modal.style.height = "100%";
-    modal.style.background = "rgba(0, 0, 0, 0.7)";
     modal.style.zIndex = "9999";
+    modal.style.background = "rgba(0, 0, 0, 0.7)";
+    modal.style.display = "flex";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
 
     // Build content with contractor updates
     const modalContent = `
-      <div class="modal-content">
+      <div class="modal-content"
+           style="
+             background: white;
+             padding: 20px;
+             border-radius: 8px;
+             max-height: 80vh;
+             overflow-y: auto;
+             box-sizing: border-box;
+           ">
         <span class="close-button" id="closeReviewModal">&times;</span>
         <h3>Review Job: ${job.work_order}</h3>
         
@@ -97,38 +101,20 @@ export async function moveJobToInProgress(id) {
     const job = await response.json();
     console.log("Current job details:", job);
 
-    // Helper to format date/time for MySQL (YYYY-MM-DD HH:MM:SS)
+    // Function to format timestamps for MySQL (YYYY-MM-DD HH:MM:SS)
     function formatForMySQL(dateInput) {
-      if (!dateInput) return null;
+      if (!dateInput) return null; // Ensure NULL values are handled
+
       const date = new Date(dateInput);
-      return `${date.getFullYear()}-${
-        String(date.getMonth() + 1).padStart(2, '0')
-      }-${
-        String(date.getDate()).padStart(2, '0')
-      } ${
-        String(date.getHours()).padStart(2, '0')
-      }:${
-        String(date.getMinutes()).padStart(2, '0')
-      }:${
-        String(date.getSeconds()).padStart(2, '0')
-      }`;
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
     }
 
-    // Helper to format date/time for UI
+    // Function to format timestamps for UI (DD-MM-YYYY HH:MM:SS)
     function formatForDisplay(dateInput) {
-      if (!dateInput) return "Not Logged";
+      if (!dateInput) return "Not Logged"; // Handle NULL values
+
       const date = new Date(dateInput);
-      return `${String(date.getDate()).padStart(2, '0')}-${
-        String(date.getMonth() + 1).padStart(2, '0')
-      }-${
-        date.getFullYear()
-      } ${
-        String(date.getHours()).padStart(2, '0')
-      }:${
-        String(date.getMinutes()).padStart(2, '0')
-      }:${
-        String(date.getSeconds()).padStart(2, '0')
-      }`;
+      return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
     }
 
     // Generate formatted timestamp
@@ -150,9 +136,7 @@ export async function moveJobToInProgress(id) {
     }
 
     // Set `onsite_time` only if it was not previously set
-    const onsiteTime = (!job.onsite_time || job.onsite_time === "N/A")
-      ? formattedTime
-      : job.onsite_time;
+    const onsiteTime = !job.onsite_time || job.onsite_time === "N/A" ? formattedTime : job.onsite_time;
 
     // Prepare the updated job object
     const updatedJob = {
@@ -160,7 +144,7 @@ export async function moveJobToInProgress(id) {
       status: updatedStatus,
       contractor_status: contractorStatus,
       status_timestamp: formattedTime,
-      onsite_time: onsiteTime
+      onsite_time: onsiteTime // Set only if not already set
     };
 
     console.log("Updating job with new details:", updatedJob);
@@ -183,18 +167,16 @@ export async function moveJobToInProgress(id) {
     populateAdminJobs(G.jobs);
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
-
   } catch (error) {
     console.error("Error updating job status:", error);
     alert("Failed to update job status.");
   }
 }
 
-/**
- * Get local time in MySQL format (YYYY-MM-DD HH:MM:SS)
- */
 function getLocalMySQLTime() {
   const now = new Date();
+
+  // Convert to the user's local time and format correctly
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
@@ -205,12 +187,9 @@ function getLocalMySQLTime() {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-/**
- * Update the status of a job (Approved, Rejected, In Progress, etc.)
- */
 export async function updateJobStatus(id, newStatus) {
   try {
-    const nowLocalMySQL = getLocalMySQLTime();
+    const nowLocalMySQL = getLocalMySQLTime(); //  Get local time in MySQL format
 
     // Fetch existing job details
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
@@ -218,10 +197,10 @@ export async function updateJobStatus(id, newStatus) {
 
     const updateData = {
       status: newStatus,
-      lastUpdated: nowLocalMySQL,
+      lastUpdated: nowLocalMySQL, // Always update `lastUpdated`
     };
 
-    // Only set `logged_time` if moving to "In Progress" and it's not already set
+    //  Only set `logged_time` if moving to "In Progress" and it's not already set
     if (newStatus === "In Progress" && !jobData.logged_time) {
       updateData.logged_time = nowLocalMySQL;
     }
@@ -238,7 +217,7 @@ export async function updateJobStatus(id, newStatus) {
 
     alert(`Job status updated to: ${newStatus}`);
 
-    // Refresh Admin & Contractor Views
+    //  Refresh Admin & Contractor Views
     populateAdminJobs();
     populateContractorJobs(G.currentUser.id);
     populateTechJobs(G.currentUser.id);
@@ -249,6 +228,7 @@ export async function updateJobStatus(id, newStatus) {
   }
 }
 
+
 /**
  * Show extended job update form (with signature, machine selection, etc.).
  * All references now in snake_case.
@@ -256,7 +236,6 @@ export async function updateJobStatus(id, newStatus) {
 export async function showUpdateJobForm(id) {
   try {
     console.log("showUpdateJobForm called with id:", id);
-
     // Fetch the job record from the API.
     const jobResponse = await fetch(`${API_BASE_URL}/jobs/${id}`);
     if (!jobResponse.ok) {
@@ -288,11 +267,9 @@ export async function showUpdateJobForm(id) {
     const modalContainer = document.createElement("div");
     modalContainer.id = "updateJobModal";
     modalContainer.classList.add("modal");
+    modalContainer.style.display = "block"; // override default to show the modal
 
     // Make it fullscreen + centered with overlay
-    modalContainer.style.display = "flex";
-    modalContainer.style.alignItems = "center";
-    modalContainer.style.justifyContent = "center";
     modalContainer.style.position = "fixed";
     modalContainer.style.top = "0";
     modalContainer.style.left = "0";
@@ -300,14 +277,21 @@ export async function showUpdateJobForm(id) {
     modalContainer.style.height = "100%";
     modalContainer.style.background = "rgba(0, 0, 0, 0.7)";
     modalContainer.style.zIndex = "9999";
+    modalContainer.style.display = "flex";
+    modalContainer.style.alignItems = "center";
+    modalContainer.style.justifyContent = "center";
 
     // Create the modal content container.
     const modalContent = document.createElement("div");
     modalContent.classList.add("modal-content");
-    // You can set a max width/height here to keep content contained:
-    // modalContent.style.maxWidth = "600px";
-    // modalContent.style.maxHeight = "80%";
-    // modalContent.style.overflowY = "auto";
+
+    // **Allow scrolling if content is long**
+    modalContent.style.background = "white";
+    modalContent.style.padding = "20px";
+    modalContent.style.borderRadius = "8px";
+    modalContent.style.boxSizing = "border-box";
+    modalContent.style.maxHeight = "80vh";
+    modalContent.style.overflowY = "auto";
 
     // Determine the status field HTML.
     const statusField =
@@ -363,11 +347,7 @@ export async function showUpdateJobForm(id) {
             <label>Select Machines</label>
             <select id="machineSelect">
               <option value="">Select Machine</option>
-              ${availableMachines.map(machine => `
-                <option value="${machine.machineId}">
-                  ${machine.machineType} - ${machine.model}
-                </option>
-              `).join('')}
+              ${availableMachines.map(machine => `<option value="${machine.machineId}">${machine.machineType} - ${machine.model}</option>`).join('')}
             </select>
             <button type="button" id="addMachine">Add Machine</button>
           </div>
@@ -419,7 +399,7 @@ export async function showUpdateJobForm(id) {
       </div>
     `;
 
-    // Set the modal content
+    // Set the modal content.
     modalContent.innerHTML = formHTML;
     modalContainer.appendChild(modalContent);
     document.body.appendChild(modalContainer);
@@ -435,7 +415,7 @@ export async function showUpdateJobForm(id) {
       console.error("Close button not found");
     }
 
-    // --- Work Performed Dropdown Logic ---
+    // --- Attach Work Performed Dropdown Logic ---
     const workPerformedDropdown = document.getElementById("workPerformedDropdown");
     if (workPerformedDropdown) {
       workPerformedDropdown.addEventListener("change", function () {
@@ -443,7 +423,7 @@ export async function showUpdateJobForm(id) {
         if (selectedPhrase) {
           const textarea = document.getElementById("workPerformed");
           textarea.value += selectedPhrase + "\n";
-          this.value = ""; // Reset dropdown
+          this.value = ""; // Reset dropdown after selection
         }
       });
     } else {
@@ -454,14 +434,11 @@ export async function showUpdateJobForm(id) {
     const signatureCanvas = document.getElementById("signatureCanvas");
     const ctx = signatureCanvas.getContext("2d");
     let isDrawing = false;
-
-    // If job already has a signature in DB, load it
     if (job.signature) {
       const img = new Image();
       img.src = job.signature;
       img.onload = () => ctx.drawImage(img, 0, 0);
     }
-
     signatureCanvas.addEventListener("mousedown", e => {
       isDrawing = true;
       ctx.beginPath();
@@ -476,12 +453,13 @@ export async function showUpdateJobForm(id) {
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
     });
-
     const clearSignatureBtn = document.getElementById("clearSignature");
     if (clearSignatureBtn) {
       clearSignatureBtn.addEventListener("click", () => {
         ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
       });
+    } else {
+      console.error("clearSignature element not found");
     }
 
     // --- Machine Add/Remove Functionality ---
@@ -490,7 +468,6 @@ export async function showUpdateJobForm(id) {
       const machineSelect = document.getElementById("machineSelect");
       const selectedMachineId = machineSelect.value;
       const selectedMachineName = machineSelect.options[machineSelect.selectedIndex].text;
-
       if (!selectedMachineId) {
         alert("Please select a machine!");
         return;
@@ -513,7 +490,6 @@ export async function showUpdateJobForm(id) {
       `;
       machineList.appendChild(machineEntry);
     });
-
     document.getElementById("machineList").addEventListener("click", event => {
       if (event.target.classList.contains("remove-machine")) {
         event.target.parentElement.remove();
@@ -525,27 +501,25 @@ export async function showUpdateJobForm(id) {
       e.preventDefault();
       let newStatus = document.getElementById("jobStatus").value;
       let newContractorStatus = newStatus;
-
-      // If contractor sets "Completed", override main status
       if (G.currentUserRole === "contractor" && newStatus === "Completed") {
         newStatus = "Completed - Pending Approval";
         newContractorStatus = "Completed";
       }
-
+      
+      // Collect updated note count along with other values.
       const noteCount = document.getElementById("note_count").value;
-
-      // Collect updated machine data
+      
+      // Collect updated machine data.
       const updatedMachines = [...document.querySelectorAll(".machine-entry")].map(machine => ({
         id: machine.getAttribute("data-id"),
         name: machine.querySelector("strong").innerText,
         notes: machine.querySelector(".machine-notes").value,
-        partsUsed: machine.querySelector(".machine-parts").value,
+        partsUsed: machine.querySelector("input.machine-parts").value,
       }));
-
-      // Convert the signature canvas to a Base64 image
+      
       const signatureData = signatureCanvas.toDataURL("image/png");
-
-      // Build updated job data
+    
+      // Build updated job data.
       const updatedJobData = {
         customer_name: document.getElementById("customerName").value.trim(),
         contact_name: document.getElementById("contactName").value.trim(),
@@ -565,20 +539,19 @@ export async function showUpdateJobForm(id) {
         signature: signatureData,
         machines: updatedMachines,
       };
-
+    
       try {
-        // Merge updated data with existing job object
+        // Merge updated data with the existing job object.
         const updatedJob = { ...job, ...updatedJobData };
-
-        // Send a PUT request to update the job
+    
+        // Send a PUT request to update the job.
         const putResponse = await fetch(`${API_BASE_URL}/jobs/${job.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedJob),
         });
-
         if (!putResponse.ok) throw new Error("Failed to update job.");
-
+    
         alert("Job updated successfully and submitted for admin approval.");
         modalContainer.remove();
         showDashboard(G.currentUserRole);
@@ -587,14 +560,14 @@ export async function showUpdateJobForm(id) {
         alert("Failed to update the job.");
       }
     });
-
+    
     // --- Back to Dashboard Button ---
     const backBtn = document.getElementById("backToDashboard");
     backBtn.addEventListener("click", () => {
       modalContainer.remove();
       showDashboard(G.currentUserRole);
     });
-
+    
   } catch (error) {
     console.error("Error showing update form:", error);
     alert("Failed to load job data.");
