@@ -72,7 +72,7 @@ export async function populateAdminJobs() {
       <td>${job.contractor || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
-      <td class="last-updated">${job.lastUpdated ? formatForDisplay(job.lastUpdated) : 'Not Updated'}</td>
+      <td class="last-updated">${job.status_timestamp ? formatForDisplay(job.status_timestamp) : 'Not Updated'}</td>
       <td>${
         job.status === "Completed - Pending Approval"
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
