@@ -54,9 +54,9 @@ app.get('/jobs', async (req, res) => {
 });
 
 app.get('/jobs/:id', async (req, res) => {
-  const jobId = req.params.id;
+  const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+    const [rows] = await pool.query('SELECT * FROM jobs WHERE id = ?', [id]);
     
     if (rows.length === 0) {
       // If no job is found, return 404
@@ -71,6 +71,7 @@ app.get('/jobs/:id', async (req, res) => {
   }
 });
 
+// POST /jobs endpoint (duplicate removed)
 app.post('/jobs', async (req, res) => {
   const { work_order, customer_name, customer_address, contractor, work_required, role } = req.body;
 
@@ -91,28 +92,8 @@ app.post('/jobs', async (req, res) => {
   }
 });
 
-app.post('/jobs', async (req, res) => {
-  const { customer_name, contact_name, work_performed, status = 'Pending' } = req.body;
-  console.log('Received Data:', req.body); // Debugging
-
-  if (!customer_name || !contact_name || !work_performed) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  try {
-    const query = 'INSERT INTO jobs (customer_name, contact_name, work_performed, status) VALUES (?, ?, ?, ?)';
-    console.log('Executing Query:', query);
-    const [result] = await pool.query(query, [customer_name, contact_name, work_performed, status]);
-
-    res.json({ id: result.insertId, customer_name, contact_name, work_performed, status });
-  } catch (error) {
-    console.error('Error inserting job:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.put('/jobs/:id', async (req, res) => {
-  const { id } = req.params; // Extract ID from URL
+  const { id } = req.params; // Destructure id directly
   const { status, contractor_status, onsite_time, status_timestamp } = req.body;
 
   try {
