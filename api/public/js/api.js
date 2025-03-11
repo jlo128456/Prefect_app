@@ -45,7 +45,7 @@ export async function updateJobStatus(id) {
     const job = await response.json();
     if (!job) return;
 
-    const currentTime = new Date().toLocaleString('en-AU');
+    const currentTime = new Date().toLocaleString();
     let updatedStatus, contractorStatus, statusMessage;
 
     switch (job.status) {
