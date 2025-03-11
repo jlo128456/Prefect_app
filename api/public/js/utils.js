@@ -1,10 +1,29 @@
-// Format date for UI display (DD-MM-YYYY HH:mm:ss)
-export function formatForDisplay(dateInput) {
-  if (!dateInput) return "Not Logged"; // Handle NULL or undefined values
-
+// Format a Date for MySQL in UTC (YYYY-MM-DD HH:mm:ss)
+export function formatForMySQLUTC(dateInput) {
+  if (!dateInput) return null; // Handle null/undefined
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return "Invalid Date"; // Handle invalid dates
+  if (isNaN(date.getTime())) return null; // Handle invalid date
 
+  // Use UTC getters
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+// Convert UTC datetime to local display in DD-MM-YYYY HH:mm:ss
+export function formatForDisplayLocal(dateInput) {
+  if (!dateInput) return "Not Logged"; // Handle null/undefined
+
+  // Create a Date in the local time zone from the UTC string
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  // Local getters
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -15,16 +34,6 @@ export function formatForDisplay(dateInput) {
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
 
-// Format date for MySQL (YYYY-MM-DD HH:mm:ss)
-export function formatForMySQL(dateInput) {
-  if (!dateInput) return null; // Ensure NULL values are handled
-
-  const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return null; // Handle invalid dates
-
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ` +
-         `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-}
   export function applyStatusColor(statusElement, status) {
     if (status === "Pending") {
       statusElement.style.backgroundColor = "Green";

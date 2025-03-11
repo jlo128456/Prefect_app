@@ -45,7 +45,9 @@ export async function updateJobStatus(id) {
     const job = await response.json();
     if (!job) return;
 
-    const currentTime = new Date().toISOString();
+    // Generate timestamp using the client-side clock, in UTC
+    const currentTime = new Date().toISOString(); 
+
     let updatedStatus, contractorStatus, statusMessage;
 
     switch (job.status) {
@@ -64,12 +66,12 @@ export async function updateJobStatus(id) {
         return;
     }
 
-    // Ensure we're using snake_case keys for backend compatibility
+    // Use snake_case keys for backend compatibility
     const updatedJob = { 
       ...job, 
       status: updatedStatus, 
       contractor_status: contractorStatus, 
-      status_timestamp: currentTime 
+      status_timestamp: currentTime // This is a UTC timestamp
     };
 
     console.log("Updated job payload:", updatedJob);
@@ -92,6 +94,7 @@ export async function updateJobStatus(id) {
     console.error('Error updating job status:', error);
   }
 }
+
 
 /**
  * Periodically check for job updates and refresh the UI.

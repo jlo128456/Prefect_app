@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { formatForDisplay, applyStatusColor, formatForMySQL } from './utils.js';
+import { formatForDisplayLocal, applyStatusColor, formatForMySQL } from './utils.js';
 import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm, showAdminReviewModal } from './jobActions.js';
@@ -72,7 +72,7 @@ export async function populateAdminJobs() {
       <td>${job.contractor || 'N/A'}</td>
       <td>${job.role || 'N/A'}</td>
       <td class="status-cell">${job.status || 'N/A'}</td>
-      <td class="last-updated">${job.status_timestamp ? formatForDisplay(job.status_timestamp) : 'Not Updated'}</td>
+      <td class="last-updated">${job.status_timestamp ? formatForDisplayLocalLocal(job.status_timestamp) : 'Not Updated'}</td>
       <td>${
         job.status === "Completed - Pending Approval"
           ? `<button class="review-job" data-id="${job.id}">Review</button>`
@@ -303,8 +303,8 @@ export function populateContractorJobs(contractorId) {
   }
 
   contractorJobs.forEach(job => {
-    const requiredDate = job.required_date ? formatForDisplay(job.required_date) : "N/A";
-    const loggedTime = job.onsite_time ? formatForDisplay(job.onsite_time) : "Not Logged";
+    const requiredDate = job.required_date ? formatForDisplayLocal(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatForDisplayLocal(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
      // Create Google Maps URL
@@ -398,8 +398,8 @@ export function populateTechJobs(Techid) {
   }
 
   techJobs.forEach(job => {
-    const requiredDate = job.required_date ? formatForDisplay(job.required_date) : "N/A";
-    const loggedTime = job.onsite_time ? formatForDisplay(job.onsite_time) : "Not Logged";
+    const requiredDate = job.required_date ? formatForDisplayLocal(job.required_date) : "N/A";
+    const loggedTime = job.onsite_time ? formatForDisplayLocal(job.onsite_time) : "Not Logged";
     const displayStatus = job.contractor_status || job.status;
 
       // Create Google Maps URL
