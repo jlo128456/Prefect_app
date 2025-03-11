@@ -1,5 +1,5 @@
 import { G } from './globals.js';
-import { formatForDisplayLocal, applyStatusColor, formatForMySQL } from './utils.js';
+import { formatForDisplayLocal, applyStatusColor, formatForMySQLUTC } from './utils.js';
 import { API_BASE_URL } from './api.js';  // <-- Import the base URL
 import { checkForJobUpdates, refreshContractorView, updateJobStatus } from './api.js';
 import { moveJobToInProgress, showUpdateJobForm, showAdminReviewModal } from './jobActions.js';
